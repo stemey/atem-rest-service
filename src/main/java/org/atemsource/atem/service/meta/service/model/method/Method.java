@@ -15,8 +15,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class Method extends Service
 {
 
-	private static final long serialVersionUID = 1L;
-
 	@Association(targetType = Param.class)
 	private List<Param> params;
 

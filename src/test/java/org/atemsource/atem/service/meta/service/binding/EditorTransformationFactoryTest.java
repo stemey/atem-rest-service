@@ -51,13 +51,88 @@ public class EditorTransformationFactoryTest {
 	public void testEditorSchema() {
 		EntityType<?> entityType = (EntityType<?>) editorTransformationFactory.getTransformation().getTypeB();
 		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
 		 System.out.println(schemaSchema);
 	}
+	@Test
+	public void testEditorAttributeSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("editor:attribute");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testEditorListAttributeSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("editor:array-attribute");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testEditorSingleAttributeSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("editor:single-attribute");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	
 	
 	@Test
 	public void testSchemaSchema() {
 		EntityType<?> entityType = (EntityType<?>) schemaTransformationFactory.getTransformation().getTypeB();
 		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testAttributeSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:attribute");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testListAttributeSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:array-attribute");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testSingleAttributeSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:single-attribute");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testTypeRefSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:type-ref");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testPrimitiveTypeRefSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:primitivetype-ref");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
+		 System.out.println(schemaSchema);
+	}
+	
+	@Test
+	public void testEntityTypeRefSchema() {
+		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:entitytype-ref");
+		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+		 System.out.println(entityType.getCode()+":");
 		 System.out.println(schemaSchema);
 	}
 	

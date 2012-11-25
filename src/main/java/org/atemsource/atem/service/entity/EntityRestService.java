@@ -62,10 +62,8 @@ public class EntityRestService {
 	protected Object readEntity(String idAsString, String type) {
 		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
 		DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		FindByTypedIdService findByIdService = entityType.getService(FindByTypedIdService.class);
-		ExternalizableIdentityService identityService = entityType.getService(ExternalizableIdentityService.class);
-		Serializable id = identityService.getIdFromString(entityType, idAsString);
-		Object entity = findByIdService.findByTypedId(entityType, id);
+		CrudService crudService = entityType.getService(CrudService.class);
+		Object entity = crudService.findEntity(entityType, idAsString);
 		UniTransformation<Object, ObjectNode> ab = (UniTransformation<Object, ObjectNode>) derivedType
 				.getTransformation().getAB();
 		ObjectNode json = ab.convert(entity, new SimpleTransformationContext(entityTypeRepository));

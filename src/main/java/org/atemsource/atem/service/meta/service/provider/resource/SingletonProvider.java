@@ -1,7 +1,7 @@
 package org.atemsource.atem.service.meta.service.provider.resource;
 
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -11,19 +11,19 @@ import org.atemsource.atem.api.attribute.relation.SingleAttribute;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.TypeFilter;
 import org.atemsource.atem.service.entity.CrudService;
-import org.atemsource.atem.service.meta.service.model.resource.Resource;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
+import org.atemsource.atem.service.meta.service.model.resource.Singleton;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class ResourceProvider implements ServiceProvider<Resource>{
+public class SingletonProvider implements ServiceProvider<Singleton> {
 	@Inject
 	private EntityTypeRepository entityTypeRepository;
 
 	private TypeFilter<ObjectNode> typeFilter;
 
-	private Set<Resource> resources = new HashSet<Resource>();
+	private Set<Singleton> resources = new HashSet<Singleton>();
 
 	public void initialize() {
 		EntityType<EntityType> metaType = entityTypeRepository.getEntityType(EntityType.class);
@@ -31,22 +31,26 @@ public class ResourceProvider implements ServiceProvider<Resource>{
 				.getMetaAttribute(DerivedType.META_ATTRIBUTE_CODE);
 		for (EntityType<?> entityType : typeFilter.getEntityTypes()) {
 			EntityType<?> originalType = (EntityType<?>) derivedTypeAttribute.getValue(entityType);
-			if (originalType != null) {
-				Resource resource = createResource(entityType, originalType);
-				if (resource != null) {
-					resources.add(resource);
-				}
-			} else {
-				Resource resource = createResource(entityType, entityType);
-				if (resource != null) {
-					resources.add(resource);
+			EntityType<?> viewType;
+			if (originalType == null) {
+				originalType = entityType;
+			}
+			CrudService crudService = originalType.getService(CrudService.class);
+			if (crudService != null) {
+				List<String> ids = crudService.getIds(originalType);
+				for (String id : ids) {
+					Singleton resource = createSingleton(entityType, originalType, id);
+					if (resource != null) {
+						resources.add(resource);
+					}
+
 				}
 			}
 		}
 
 	}
 
-	public Set<Resource> getServices() {
+	public Set<Singleton> getServices() {
 		return resources;
 	}
 
@@ -54,20 +58,19 @@ public class ResourceProvider implements ServiceProvider<Resource>{
 		this.typeFilter = typeFilter;
 	}
 
-	private Resource createResource(EntityType<?> viewType, EntityType<?> originalType) {
+	private Singleton createSingleton(EntityType<?> viewType, EntityType<?> originalType, String id) {
 		CrudService crudService = originalType.getService(CrudService.class);
 		if (crudService == null) {
 			return null;
 		} else {
-			Resource resource = new Resource();
-			resource.setUriPath(uriPath+"/"+viewType.getCode());
-			resource.setName(originalType.getCode());
-			resource.setResourceType(viewType);
+			Singleton singleton = new Singleton();
+			singleton.setUriPath(uriPath + "/" + viewType.getCode() + "/" + id);
+			singleton.setName(originalType.getCode());
+			singleton.setResourceType(viewType);
 			Set<ResourceOperation> resourceOperations = new HashSet<ResourceOperation>();
 			resourceOperations.add(ResourceOperation.READ);
-			resource.setSingleOperations(resourceOperations);
-			resource.setCollectionOperations(Collections.EMPTY_SET);
-			return resource;
+			singleton.setSingleOperations(resourceOperations);
+			return singleton;
 		}
 	}
 

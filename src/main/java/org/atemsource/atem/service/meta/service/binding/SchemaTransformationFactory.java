@@ -33,11 +33,14 @@ import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
 import org.atemsource.atem.utility.transform.api.constraint.DateFormat;
 import org.atemsource.atem.utility.transform.api.constraint.PossibleValues;
+import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 import org.atemsource.atem.utility.transform.impl.builder.GenericTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.builder.OneToOneAttributeTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.builder.TransformationTargetTypeBuilder;
 import org.atemsource.atem.utility.transform.impl.converter.ConverterUtils;
+import org.atemsource.atem.utility.transform.impl.converter.StringPossibleValues;
+import org.atemsource.atem.utility.validation.ValidationVisitor;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -49,7 +52,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class SchemaTransformationFactory {
 	private static final String SINGLE_ATTRIBUTE_TYPE_CODE = "single-attribute";
 
-	private static final String COLLECTION_ATTRIBUTE_TYPE_CODE = "list-attribute";
+	private static final String COLLECTION_ATTRIBUTE_TYPE_CODE = "array-attribute";
 
 	private static final String ATTRIBUTE_TYPE_CODE = "attribute";
 
@@ -65,6 +68,10 @@ public class SchemaTransformationFactory {
 
 	private static final String SCHEMA_TYPE_CODE = "schema";
 	private static final String TYPE_REF_TYPE_CODE = "type-ref";
+
+	private static final String ENTITYTYPE_REF_TYPE_CODE = "entitytype-ref";
+
+	private static final String PRIMITIVETYPE_REF_TYPE_CODE = "primitivetype-ref";
 
 	private static Logger logger = Logger.getLogger(SchemaTransformationFactory.class);
 
@@ -240,8 +247,11 @@ public class SchemaTransformationFactory {
 		EntityTypeBuilder typeRefBuilder = subrepository.createBuilder(typeCodePrefix + TYPE_REF_TYPE_CODE);
 		TypeTransformationBuilder<EntityType,?> typeRefTransformationBuilder = transformationBuilderFactory.create(EntityType.class,
 				typeRefBuilder);
-		typeRefTransformationBuilder.transform().from("code");
-		EntityTypeTransformation<EntityType, ?> typeRefTransformation = typeRefTransformationBuilder.buildTypeTransformation();
+		createPrimitiveTypeRefTransformation(typeRefTransformationBuilder.getReference());
+		EntityTypeTransformation<EntityType, ?> typeRefTransformation = createEntityTypeRefTransformation(typeRefTransformationBuilder.getReference());
+		EntityTypeTransformation<EntityType, ?> entitytypeRefTransformation = typeRefTransformationBuilder.buildTypeTransformation();
+		
+		
 		
 		
 		EntityTypeBuilder schemaBuilder = subrepository.createBuilder(typeCodePrefix + SCHEMA_TYPE_CODE);
@@ -262,6 +272,8 @@ public class SchemaTransformationFactory {
 		schemaTransformationBuilder.transformCollection().from("attributes").to("attributes")
 				.convert(createAttributeTransformation(typeTransformation, typeRefTransformation,typeRefTransformation.getEntityTypeB()));
 
+		schemaTransformationBuilder.transform().from("superEntityType").to("extends").convert(entitytypeRefTransformation);
+		
 		basicTransformationBuilder.buildTypeTransformation();
 		schemaTransformationBuilder.includeSuper(typeTransformation);
 
@@ -281,6 +293,46 @@ public class SchemaTransformationFactory {
 
 		schemaTransformationBuilder.buildTypeTransformation();
 
+	}
+
+	private void createPrimitiveTypeRefTransformation(EntityTypeTransformation<?, ?> superTypeRefTransformation) {
+		EntityTypeBuilder typeRefBuilder = subrepository.createBuilder(typeCodePrefix + PRIMITIVETYPE_REF_TYPE_CODE);
+		TypeTransformationBuilder<EntityType,?> typeRefTransformationBuilder = transformationBuilderFactory.create(EntityType.class,
+				typeRefBuilder);
+		typeRefTransformationBuilder.transform().from("code");
+		
+		typeRefTransformationBuilder.includeSuper(superTypeRefTransformation);
+		
+		EntityTypeTransformation<EntityType, ?> typeRefTransformation = typeRefTransformationBuilder.buildTypeTransformation();
+		
+		Attribute attribute = ((EntityType)typeRefTransformation.getTypeB()).getAttribute("code");
+		Attribute metaAttribute = entityTypeRepository.getEntityType(Attribute.class).getMetaAttribute(PossibleValues.META_ATTRIBUTE_CODE);
+		
+		
+		String[] values = new String[]{//
+				getCode(Boolean.class),//
+				getCode(Long.class),//
+				getCode(String.class),//
+				getCode(Integer.class)//
+				};
+		
+		metaAttribute.setValue(attribute, new StringPossibleValues(values));
+	}
+	
+	private EntityTypeTransformation<EntityType, ?> createEntityTypeRefTransformation(EntityTypeTransformation<?, ?> superTypeRefTransformation) {
+		EntityTypeBuilder typeRefBuilder = subrepository.createBuilder(typeCodePrefix + ENTITYTYPE_REF_TYPE_CODE);
+		TypeTransformationBuilder<EntityType,?> typeRefTransformationBuilder = transformationBuilderFactory.create(EntityType.class,
+				typeRefBuilder);
+		typeRefTransformationBuilder.transform().from("code");
+		
+		typeRefTransformationBuilder.includeSuper(superTypeRefTransformation);
+		
+		return typeRefTransformationBuilder.buildTypeTransformation();
+	
+	}
+	
+	private String getCode(Class clazz) {
+		return entityTypeRepository.getType(clazz).getCode();
 	}
 
 	public void setSubrepository(DynamicEntityTypeSubrepository<?> subrepository) {

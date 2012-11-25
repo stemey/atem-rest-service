@@ -49,7 +49,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class EditorTransformationFactory {
 	private static final String SINGLE_ATTRIBUTE_TYPE_CODE = "single-attribute";
 
-	private static final String COLLECTION_ATTRIBUTE_TYPE_CODE = "list-attribute";
+	private static final String COLLECTION_ATTRIBUTE_TYPE_CODE = "array-attribute";
 
 	private static final String ATTRIBUTE_TYPE_CODE = "attribute";
 
@@ -184,7 +184,6 @@ public class EditorTransformationFactory {
 		OneToOneAttributeTransformationBuilder<Attribute, ?, ?> requiredTransformer = transformationBuilder.transform();
 		requiredTransformer.from("required");
 		requiredTransformer.to("required");
-		// transformationBuilder.transform().from("code").to("label");
 		transformationBuilder.transform().from("targetType").to("type").convert(typeTransformation);
 
 		transformValidTypes(transformationBuilder, typeTransformation, schemaType);
