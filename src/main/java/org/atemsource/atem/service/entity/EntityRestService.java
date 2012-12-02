@@ -2,6 +2,7 @@ package org.atemsource.atem.service.entity;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Observer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.atemsource.atem.api.BeanLocator;
 import org.atemsource.atem.api.EntityTypeRepository;
 import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.service.FindByTypedIdService;
@@ -31,17 +33,17 @@ public class EntityRestService {
 	@PostConstruct
 	public void initialize() {
 		metaType = entityTypeRepository.getEntityType(EntityType.class);
-		derivedTypeAttribute = metaType.getAttribute(DerivedObject.META_ATTRIBUTE_CODE);
+		derivedTypeAttribute = metaType.getMetaAttribute(DerivedObject.META_ATTRIBUTE_CODE);
 	}
 
-	private final Pattern pattern = Pattern.compile("/entities/(type)/(id)");
+	private final Pattern pattern = Pattern.compile("/entities/([^/]+)/([^/]+)");
 	private Attribute derivedTypeAttribute;
 
 	private ObjectMapper objectMapper;
 
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String servletPath = req.getServletPath();
-		Matcher matcher = pattern.matcher(servletPath);
+		String uri = req.getRequestURI();
+		Matcher matcher = pattern.matcher(uri);
 		if (matcher.find()) {
 			String type = matcher.group(1);
 			String idAsString = matcher.group(2);
@@ -59,11 +61,16 @@ public class EntityRestService {
 
 	}
 
+	public void setObjectMapper(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
+	}
+
 	protected Object readEntity(String idAsString, String type) {
 		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
 		DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		CrudService crudService = entityType.getService(CrudService.class);
-		Object entity = crudService.findEntity(entityType, idAsString);
+		EntityType<?> originalType = derivedType.getOriginalType();
+		CrudService crudService = originalType.getService(CrudService.class);
+		Object entity = crudService.findEntity(originalType, idAsString);
 		UniTransformation<Object, ObjectNode> ab = (UniTransformation<Object, ObjectNode>) derivedType
 				.getTransformation().getAB();
 		ObjectNode json = ab.convert(entity, new SimpleTransformationContext(entityTypeRepository));

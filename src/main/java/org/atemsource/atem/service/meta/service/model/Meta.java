@@ -13,18 +13,18 @@ public class Meta {
 
 	private static final long serialVersionUID = 1L;
 
-	@MapAssociation(keyType = String.class, targetType = Method.class)
-	private final SortedMap<String, Service> methods = new TreeMap<String, Service>();
+	@MapAssociation(keyType = String.class, targetType = Service.class)
+	private final SortedMap<String, Service> services = new TreeMap<String, Service>();
 
 	public Meta() {
 	}
 
 	public void addService(Service method) {
-		methods.put(method.getName(), method);
+		services.put(method.getName(), method);
 	}
 
 	public Map<String, Service> getServices() {
-		return methods;
+		return services;
 	}
 
 	public void addServices(Set<? extends Service> services) {
