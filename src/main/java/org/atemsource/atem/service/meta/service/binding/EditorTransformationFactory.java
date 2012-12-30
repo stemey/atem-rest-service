@@ -186,9 +186,7 @@ public class EditorTransformationFactory {
 		requiredTransformer.to("required");
 		transformationBuilder.transform().from("targetType").to("type").convert(typeTransformation);
 
-		transformValidTypes(transformationBuilder, typeTransformation, schemaType);
-
-		transformationBuilder.transform().from("code").to("label");
+				transformationBuilder.transform().from("code").to("label");
 		transformationBuilder.transform().from("code").to("code");
 
 		transformationBuilder.transformCollection().to("values")
@@ -231,6 +229,16 @@ public class EditorTransformationFactory {
 	public TransformationBuilderFactory getTransformationBuilderFactory() {
 		return transformationBuilderFactory;
 	}
+	
+	private AttributeTransformationFactory attributeTransformationFactory;
+
+	public AttributeTransformationFactory getAttributeTransformationFactory() {
+		return attributeTransformationFactory;
+	}
+
+	public void setAttributeTransformationFactory(AttributeTransformationFactory attributeTransformationFactory) {
+		this.attributeTransformationFactory = attributeTransformationFactory;
+	}
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct
@@ -244,14 +252,16 @@ public class EditorTransformationFactory {
 
 		EntityTypeTransformation typeTransformation = basicTransformationBuilder.getReference();
 
-		EntityTypeTransformation primitiveTypeTransformation = createPrimitiveTypeTransformation(typeTransformation);
-
 		final TypeTransformationBuilder<EntityType, ?> schemaTransformationBuilder = transformationBuilderFactory
 				.create(EntityType.class, schemaBuilder);
 		schemaTransformation = (EntityTypeTransformation<EntityType, ?>) schemaTransformationBuilder.getReference();
+		
+		attributeTransformationFactory.init(schemaTransformation);
+		
 
 		schemaTransformationBuilder.transformCollection().from("attributes").to("attributes")
-				.convert(createAttributeTransformation(typeTransformation, schemaTransformation,((AbstractEntityTypeBuilder)schemaBuilder).getReference()));
+				.convert(attributeTransformationFactory.getAttributeTransformation());
+		
 
 		basicTransformationBuilder.buildTypeTransformation();
 		schemaTransformationBuilder.includeSuper(typeTransformation);
@@ -307,61 +317,5 @@ public class EditorTransformationFactory {
 		typeBuilder.addSingleAttribute("label", String.class);
 	}
 
-	@SuppressWarnings("unchecked")
-	private void transformValidTypes(TypeTransformationBuilder<Attribute, ?> attributeTransformationBuilder,
-			final EntityTypeTransformation<EntityType, ObjectNode> typeTransformation,
-			EntityType schemaType) {
-		attributeTransformationBuilder
-				.transformCustom(GenericTransformationBuilder.class)
-				.transform(new JavaTransformation<Attribute<?, ?>, ObjectNode>() {
 
-					@Override
-					public void mergeAB(Attribute<?, ?> a, ObjectNode b, TransformationContext ctx) {
-						logger.debug("transforming " + a.getEntityType().getEntityClass().getSimpleName() + "."
-								+ a.getCode());
-
-						if (a.getTargetType() instanceof EntityType) {
-
-							ValidTypes validTypes = ((JavaMetaData) a).getAnnotation(ValidTypes.class);
-
-							ArrayNode validTypesArray = b.arrayNode();
-							if (validTypes != null && validTypes.value().length == 0) {
-								b.putNull("validTypes");
-							} else if (validTypes != null && validTypes.value().length > 0) {
-								for (Class clazz : validTypes.value()) {
-									EntityType type = entityTypeRepository.getEntityType(clazz);
-									UniTransformation<EntityType, ObjectNode> ab = typeTransformation.getAB();
-									ObjectNode value = ab.convert(type, ctx);
-									validTypesArray.add(value);
-								}
-								b.put("validTypes", validTypesArray);
-							} else {
-								// TODO the valid types should contain all
-								// attributes in the subtypes.
-								for (EntityType entityType : ((EntityType<?>) a.getTargetType())
-										.getSelfAndAllSubEntityTypes()) {
-									if (!entityType.isAbstractType()) {
-
-										UniTransformation<EntityType, ObjectNode> ab = typeTransformation.getAB();
-										ObjectNode value = ab.convert(entityType, ctx);
-										validTypesArray.add(value);
-									}
-								}
-								if (validTypesArray.size() > 0) {
-									b.put("validTypes", validTypesArray);
-								}
-							}
-						}
-
-					}
-
-					@Override
-					public void mergeBA(ObjectNode b, Attribute a, TransformationContext ctx) {
-					}
-
-				})
-				.to()
-				.addMultiAssociationAttribute("validTypes",
-						schemaType, CollectionSortType.ORDERABLE);
-	}
 }

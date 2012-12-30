@@ -2,13 +2,17 @@ package org.atemsource.atem.service.meta.service.binding;
 
 import static org.junit.Assert.*;
 
+import javax.annotation.Resource;
 import javax.inject.Inject;
 
 import org.atemsource.atem.api.EntityTypeRepository;
 import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.api.type.EntityTypeBuilder;
+import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
 import org.atemsource.atem.utility.transform.api.SimpleTransformationContext;
 import org.codehaus.jackson.node.ObjectNode;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -22,126 +26,56 @@ public class EditorTransformationFactoryTest {
 	private EditorTransformationFactory editorTransformationFactory;
 	
 	@Inject
-	private SchemaTransformationFactory schemaTransformationFactory;
-	
-	@Inject
 	private EntityTypeRepository entityTypeRepository;
 	
+	@Resource(name="atem-json-repository")
+	private DynamicEntityTypeSubrepository<ObjectNode> subRepository;
 	
-	@Test
-	public void testSchemaTypeAttributes() {
-		EntityType<?> entityType = (EntityType<?>) editorTransformationFactory.getTransformation().getTypeB();
-		assertNotNull(entityType.getAttribute("type-property"));
-		assertNotNull(entityType.getAttribute("attributes"));
-		assertNotNull(entityType.getAttribute("code"));
-		assertNotNull(entityType.getAttribute("label"));
-	}
-	@Test
-	public void testAttributeTypeAttributes() {
-		EntityType<?> targetType = getAttributeType();
-		assertNotNull(targetType.getAttribute("code"));
-		assertNotNull(targetType.getAttribute("label"));
-		assertNotNull(targetType.getAttribute("type"));
-		assertNotNull(targetType.getAttribute("dateformat"));
-		assertNotNull(targetType.getAttribute("validTypes"));
-		assertNotNull(targetType.getAttribute("values"));
-	}
-	
-	@Test
-	public void testEditorSchema() {
-		EntityType<?> entityType = (EntityType<?>) editorTransformationFactory.getTransformation().getTypeB();
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	@Test
-	public void testEditorAttributeSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("editor:attribute");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
+	@Before
+	public void createTypes() {
+		if (entityTypeRepository.getEntityType("test1")==null) {
+
+			EntityTypeBuilder builder3 = subRepository.createBuilder("test3");
+			EntityType<?> superType = builder3.createEntityType();
+
+			EntityTypeBuilder builder = subRepository.createBuilder("test1");
+			builder.addSingleAttribute("astring", String.class);
+			builder.addSingleAttribute("adouble", Double.class);
+			builder.addSingleAttribute("aboolean", Boolean.class);
+			builder.superType(superType);
+			EntityType<?> test1 = builder.createEntityType();
+			
+			EntityTypeBuilder builder2 = subRepository.createBuilder("test2");
+			builder2.addSingleAttribute("astring", String.class);
+			builder2.addSingleAttribute("adouble", Double.class);
+			builder2.addSingleAttribute("aboolean", Boolean.class);
+			builder2.superType(superType);
+			EntityType<?> test2 = builder2.createEntityType();
+			
+			EntityTypeBuilder builder4 = subRepository.createBuilder("test4");
+			builder4.addSingleAttribute("aTest",superType);
+			EntityType<?> test4 = builder4.createEntityType();
+			
+
+		}
 	}
 	
 	@Test
-	public void testEditorListAttributeSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("editor:array-attribute");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
+	public void testSimpleType() {
+		EntityType<ObjectNode> test1 = entityTypeRepository.getEntityType("test1");
+		SimpleTransformationContext ctx = new SimpleTransformationContext(entityTypeRepository);
+		ObjectNode schema = (ObjectNode) editorTransformationFactory.getTransformation().getAB().convert(test1, ctx);
+		System.out.println(schema);
 	}
 	
 	@Test
-	public void testEditorSingleAttributeSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("editor:single-attribute");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
+	public void testPolymorphismType() {
+		EntityType<ObjectNode> test4 = entityTypeRepository.getEntityType("test4");
+		SimpleTransformationContext ctx = new SimpleTransformationContext(entityTypeRepository);
+		ObjectNode schema = (ObjectNode) editorTransformationFactory.getTransformation().getAB().convert(test4, ctx);
+		System.out.println(schema);
 	}
 	
-	
-	
-	@Test
-	public void testSchemaSchema() {
-		EntityType<?> entityType = (EntityType<?>) schemaTransformationFactory.getTransformation().getTypeB();
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	
-	@Test
-	public void testAttributeSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:attribute");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	
-	@Test
-	public void testListAttributeSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:array-attribute");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	
-	@Test
-	public void testSingleAttributeSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:single-attribute");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	
-	@Test
-	public void testTypeRefSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:type-ref");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	
-	@Test
-	public void testPrimitiveTypeRefSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:primitivetype-ref");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	
-	@Test
-	public void testEntityTypeRefSchema() {
-		EntityType<?> entityType = entityTypeRepository.getEntityType("schema:entitytype-ref");
-		 ObjectNode schemaSchema = (ObjectNode) schemaTransformationFactory.getTransformation().getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
-		 System.out.println(entityType.getCode()+":");
-		 System.out.println(schemaSchema);
-	}
-	
-	protected EntityType<?> getAttributeType() {
-		EntityType<?> entityType = (EntityType<?>) editorTransformationFactory.getTransformation().getTypeB();
-		Attribute<?,?> attributes = entityType.getAttribute("attributes");
-		assertNotNull(attributes);
-		EntityType<?> targetType = (EntityType<?>) attributes.getTargetType();
-		return targetType;
-	}
+
 
 }

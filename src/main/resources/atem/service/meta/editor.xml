@@ -22,10 +22,37 @@
 	<import resource="classpath:/meta/utility/transform-complete.xml" />
 	<import resource="classpath:/atem/jackson/entitytype-example.xml" />
 
+	<bean id="attributeTransformationFactory"
+		class="org.atemsource.atem.service.meta.service.binding.AttributeTransformationFactory">
+		<property name="subRepository" ref="atem-json-repository" />
+		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
+		<property name="attributeCreators">
+			<set>
+				<bean
+					class="org.atemsource.atem.service.meta.service.binding.attributetype.IntegerMixin" />
+				<bean
+					class="org.atemsource.atem.service.meta.service.binding.attributetype.FloatMixin" />
+				<bean
+					class="org.atemsource.atem.service.meta.service.binding.attributetype.DoubleMixin" />
+				<bean
+					class="org.atemsource.atem.service.meta.service.binding.attributetype.BooleanMixin" />
+				<bean
+					class="org.atemsource.atem.service.meta.service.binding.attributetype.StringMixin" />
+			</set>
+		</property>
+		<property name="attributeMixins">
+			<list>
+				<bean
+					class="org.atemsource.atem.service.meta.service.binding.AttributeDescriptionMixin" />
+			</list>
+		</property>
+	</bean>
+
 	<bean
 		class="org.atemsource.atem.service.meta.service.binding.EditorTransformationFactory">
 		<property name="subrepository" ref="atem-json-repository" />
 		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
+		<property name="attributeTransformationFactory" ref="attributeTransformationFactory"/>
 	</bean>
 
 	<bean
