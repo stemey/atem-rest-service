@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class AttributeTransformationFactoryTest {
 
 	@Inject
-	private AttributeTransformationFactory attributeTransformationFactory;
+	private AbstractAttributeTransformationFactory attributeTransformationFactory;
 	
 	@Inject
 	private EntityTypeRepository entityTypeRepository;

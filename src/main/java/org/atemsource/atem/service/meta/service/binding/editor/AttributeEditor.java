@@ -4,6 +4,18 @@ import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.utility.path.AttributePath;
 
 public class AttributeEditor {
-	private AttributePath attributePath;
+	private String code;
+	public String getCode() {
+		return code;
+	}
+	public void setCode(String code) {
+		this.code = code;
+	}
+	public String getEditor() {
+		return editor;
+	}
+	public void setEditor(String editor) {
+		this.editor = editor;
+	}
 	private String editor;
 }

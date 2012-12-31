@@ -3,6 +3,7 @@ package org.atemsource.atem.service.meta.service.binding;
 import javax.annotation.PostConstruct;
 
 import org.atemsource.atem.impl.dynamic.DynamicEntityTypeRepository;
+import org.atemsource.atem.service.meta.service.binding.editor.EditorTransformationFactory;
 import org.atemsource.atem.service.meta.service.model.Meta;
 import org.atemsource.atem.service.meta.service.model.method.Method;
 import org.atemsource.atem.service.meta.service.model.method.Param;

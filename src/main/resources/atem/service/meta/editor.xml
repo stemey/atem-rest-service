@@ -22,8 +22,8 @@
 	<import resource="classpath:/meta/utility/transform-complete.xml" />
 	<import resource="classpath:/atem/jackson/entitytype-example.xml" />
 
-	<bean id="attributeTransformationFactory"
-		class="org.atemsource.atem.service.meta.service.binding.AttributeTransformationFactory">
+	<bean abstract="true" id="attributeTransformationFactory"
+		class="org.atemsource.atem.service.meta.service.binding.AbstractAttributeTransformationFactory">
 		<property name="subRepository" ref="atem-json-repository" />
 		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
 		<property name="attributeCreators">
@@ -49,16 +49,25 @@
 	</bean>
 
 	<bean
-		class="org.atemsource.atem.service.meta.service.binding.EditorTransformationFactory">
+		class="org.atemsource.atem.service.meta.service.binding.editor.EditorTransformationFactory">
 		<property name="subrepository" ref="atem-json-repository" />
 		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
-		<property name="attributeTransformationFactory" ref="attributeTransformationFactory"/>
+		<property name="attributeTransformationFactory">
+			<bean parent="attributeTransformationFactory" class="org.atemsource.atem.service.meta.service.binding.editor.AttributeTransformationFactory">
+				<property name="typeCodePrefix" value="editor"/>
+			</bean>
+		</property>
 	</bean>
 
 	<bean
-		class="org.atemsource.atem.service.meta.service.binding.SchemaTransformationFactory">
+		class="org.atemsource.atem.service.meta.service.binding.schema.SchemaTransformationFactory">
 		<property name="subrepository" ref="atem-json-repository" />
 		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
+		<property name="attributeTransformationFactory">
+		<bean parent="attributeTransformationFactory" class="org.atemsource.atem.service.meta.service.binding.schema.AttributeTransformationFactory">
+				<property name="typeCodePrefix" value="schema"/>
+			</bean>
+		</property>
 	</bean>
 
 
