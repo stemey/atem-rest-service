@@ -10,11 +10,15 @@ import org.atemsource.atem.api.BeanLocator;
 import org.atemsource.atem.api.infrastructure.bean.Bean;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.service.entity.CrudService;
+import org.atemsource.atem.service.entity.UpdateCallback;
+import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
 
 public class SpringBeanCrudService implements CrudService {
 
 	@Inject
 	private BeanLocator beanLocator;
+	
+	private ResourceOperation[] supportedOperations= new ResourceOperation[]{ResourceOperation.READ,ResourceOperation.UPDATE};
 
 	@Override
 	public String getIdAsString(EntityType<?> entityType, Object entity) {
@@ -35,6 +39,26 @@ public class SpringBeanCrudService implements CrudService {
 			ids.add(bean.getBeanName());
 		}
 		return ids;
+	}
+
+	@Override
+	public void update(String id, EntityType<?> originalType, UpdateCallback updateCallback) {
+		updateCallback.update(findEntity(originalType, id));
+	}
+
+	@Override
+	public String create(EntityType<?> originalType, Object entity) {
+		throw new UnsupportedOperationException("creating a new spring bean is not supported.");
+	}
+
+	@Override
+	public void delete(EntityType<?> originalType, String id) {
+		throw new UnsupportedOperationException("deleting spring beans is not supported.");
+	}
+
+	@Override
+	public ResourceOperation[] getSupportedOperations() {
+		return supportedOperations;
 	}
 
 }

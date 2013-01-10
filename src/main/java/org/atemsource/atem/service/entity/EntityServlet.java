@@ -20,5 +20,9 @@ public class EntityServlet extends HttpServlet{
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		BeanLocator.getInstance().getInstance(EntityRestService.class).doGet(req, resp);
 	}
+	@Override
+	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		BeanLocator.getInstance().getInstance(EntityRestService.class).doPut(req, resp);
+	}
 
 }

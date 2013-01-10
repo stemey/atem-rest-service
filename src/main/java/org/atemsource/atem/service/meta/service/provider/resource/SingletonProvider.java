@@ -1,5 +1,6 @@
 package org.atemsource.atem.service.meta.service.provider.resource;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -73,8 +74,9 @@ public class SingletonProvider implements ServiceProvider<Singleton> {
 			singleton.setName(originalType.getCode()+"/"+id);
 			singleton.setResourceType(viewType);
 			Set<ResourceOperation> resourceOperations = new HashSet<ResourceOperation>();
-			resourceOperations.add(ResourceOperation.READ);
-			singleton.setSingleOperations(resourceOperations);
+			for (ResourceOperation operation:crudService.getSupportedOperations()) {
+				resourceOperations.add(operation);
+			}
 			return singleton;
 		}
 	}

@@ -1,5 +1,6 @@
 package org.atemsource.atem.service.entity;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Observer;
@@ -21,6 +22,7 @@ import org.atemsource.atem.impl.meta.DerivedObject;
 import org.atemsource.atem.utility.transform.api.SimpleTransformationContext;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -61,6 +63,22 @@ public class EntityRestService {
 
 	}
 
+	public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		String uri = req.getRequestURI();
+		Matcher matcher = pattern.matcher(uri);
+		if (matcher.find()) {
+			String type = matcher.group(1);
+			String idAsString = matcher.group(2);
+			BufferedReader reader = req.getReader();
+			JsonNode jsonNode = objectMapper.readTree(reader);
+			updateEntity(idAsString, type,jsonNode);
+		} else {
+			// 404
+			resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+		}
+
+	}
+
 	public void setObjectMapper(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
 	}
@@ -75,5 +93,21 @@ public class EntityRestService {
 				.getTransformation().getAB();
 		ObjectNode json = ab.convert(entity, new SimpleTransformationContext(entityTypeRepository));
 		return json;
+	}
+	protected void updateEntity(String idAsString, String type,final Object updatedObject) {
+		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
+		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
+		EntityType<?> originalType = derivedType.getOriginalType();
+		CrudService crudService = originalType.getService(CrudService.class);
+		final Object currentObject = crudService.findEntity(originalType, idAsString);
+		crudService.update(idAsString,originalType, new UpdateCallback() {
+			
+			@Override
+			public void update(Object entity) {
+				UniTransformation<Object, Object> ba = (UniTransformation<Object, Object>) derivedType
+						.getTransformation().getBA();
+				ba.merge(updatedObject, currentObject, new SimpleTransformationContext(entityTypeRepository));
+			}
+		});
 	}
 }
