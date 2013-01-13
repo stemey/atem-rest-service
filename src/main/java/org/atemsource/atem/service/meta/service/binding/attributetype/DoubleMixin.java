@@ -25,13 +25,16 @@ public class DoubleMixin implements AttributeTransformationCreator {
 	}
 
 
-
 	@Override
-	public Class<?> getType() {
-		return java.lang.Double.class;
+	public boolean canTransform(Attribute<?,?> attribute) {
+		return attribute.getTargetType().getJavaType()==Double.class;
 	}
 
-	
+
+	@Override
+	public String getTargetName() {
+		return "double";
+	}	
 	
 
 }

@@ -8,6 +8,7 @@ import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 
 public interface AttributeTransformationCreator {
 public EntityTypeTransformation<?,?> addAttributeTransformation(TypeTransformationBuilder<Attribute, ?> transformationBuilder);
-public Class<?> getType(); 
+public boolean canTransform(Attribute<?,?> attribute);
+public String getTargetName();
 
 }

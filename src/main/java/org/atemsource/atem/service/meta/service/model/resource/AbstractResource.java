@@ -10,8 +10,11 @@ import org.atemsource.atem.utility.transform.api.annotation.Conversion;
 
 public class AbstractResource extends Service {
 
+	//@Conversion(DojoTableConversion.class)
+	private EntityType<?> collectionType;
 	@Conversion(EditorConversion.class)
 	private EntityType<?> resourceType;
+	private String idAttribute;
 	@Association(targetType = ResourceOperation.class)
 	private Set<ResourceOperation> singleOperations;
 	private String uriPath;

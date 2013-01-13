@@ -18,11 +18,19 @@ public class BooleanMixin implements AttributeTransformationCreator {
 		return transformationBuilder.buildTypeTransformation();
 	}
 	
-	public Class<?> getType() {
-		return Boolean.class;
+	
+	protected void extend(TypeTransformationBuilder<Attribute, ?> transformationBuilder) {
 	}
 
-	protected void extend(TypeTransformationBuilder<Attribute, ?> transformationBuilder) {
+	@Override
+	public boolean canTransform(Attribute<?,?> attribute) {
+		return attribute.getTargetType().getJavaType()==Boolean.class;
+	}
+
+
+	@Override
+	public String getTargetName() {
+		return "boolean";
 	}
 
 	

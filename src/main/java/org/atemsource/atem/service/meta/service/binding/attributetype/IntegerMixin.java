@@ -17,15 +17,19 @@ public class IntegerMixin implements AttributeTransformationCreator {
 		return transformationBuilder.buildTypeTransformation();
 	}
 	
-	public Class<?> getType() {
-		return Integer.class;
+	@Override
+	public boolean canTransform(Attribute<?,?> attribute) {
+		return attribute.getTargetType().getJavaType()==Integer.class;
 	}
 
 	protected void extend(TypeTransformationBuilder<Attribute, ?> transformationBuilder) {
 	}
 
 
-
+	@Override
+	public String getTargetName() {
+		return "integer";
+	}
 	
 
 }

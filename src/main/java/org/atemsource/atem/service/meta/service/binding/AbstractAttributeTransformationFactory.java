@@ -48,8 +48,8 @@ public abstract class AbstractAttributeTransformationFactory {
 	protected EntityTypeRepository entityTypeRepository;
 	private EntityTypeTransformation attributeTransformation;
 	private EntityTypeTransformation<Attribute, ?> arrayTransformation;
-	private Map<Class<?>, EntityTypeTransformation<?, ?>> singleTransformations = new HashMap<Class<?>, EntityTypeTransformation<?, ?>>();
-	private Map<Class<?>, EntityTypeTransformation<?, ?>> arrayTransformations = new HashMap<Class<?>, EntityTypeTransformation<?, ?>>();
+	private Map<AttributeTransformationCreator, EntityTypeTransformation<?, ?>> singleTransformations = new HashMap<AttributeTransformationCreator, EntityTypeTransformation<?, ?>>();
+	private Map<AttributeTransformationCreator, EntityTypeTransformation<?, ?>> arrayTransformations = new HashMap<AttributeTransformationCreator, EntityTypeTransformation<?, ?>>();
 	private Set<AttributeTransformationCreator> attributeCreators;
 	private List<AttributeMixin> attributeMixins;
 
@@ -87,19 +87,23 @@ public abstract class AbstractAttributeTransformationFactory {
 			public UniTransformation getAB(Attribute a, TransformationContext ctx) {
 				Class<?> type = a.getTargetType().getJavaType();
 				if (a instanceof CollectionAttribute) {
-					EntityTypeTransformation<?, ?> transformation = arrayTransformations.get(type);
-					if (transformation != null) {
-						return transformation.getAB();
-					} else if (a.getTargetType() instanceof EntityType<?>) {
+					for (AttributeTransformationCreator creator:attributeCreators) {
+						if (creator.canTransform(a)) {
+							return arrayTransformations.get(creator).getAB();
+						}
+					}
+					if (a.getTargetType() instanceof EntityType<?>) {
 						return complexArrayTransformation.getAB();
 					} else {
 						return null;
 					}
 				} else {
-					EntityTypeTransformation<?, ?> transformation = singleTransformations.get(type);
-					if (transformation != null) {
-						return transformation.getAB();
-					} else if (a.getTargetType() instanceof EntityType<?>) {
+					for (AttributeTransformationCreator creator:attributeCreators) {
+						if (creator.canTransform(a)) {
+							return singleTransformations.get(creator).getAB();
+						}
+					}
+					 if (a.getTargetType() instanceof EntityType<?>) {
 						return complexSingleTransformation.getAB();
 					} else {
 						return null;
@@ -134,7 +138,7 @@ public abstract class AbstractAttributeTransformationFactory {
 
 	protected void createPrimitiveAttributes(boolean array) {
 		for (AttributeTransformationCreator creator : attributeCreators) {
-			EntityTypeBuilder typeBuilder = subRepository.createBuilder(typeCodePrefix+":"+creator.getType().getName()
+			EntityTypeBuilder typeBuilder = subRepository.createBuilder(typeCodePrefix+":"+creator.getTargetName()
 					+ (array ? "-array" : ""));
 			TypeTransformationBuilder<Attribute, ?> transformationBuilder = transformationBuilderFactory.create(
 					Attribute.class, typeBuilder);
@@ -144,9 +148,9 @@ public abstract class AbstractAttributeTransformationFactory {
 			transformationBuilder.includeSuper(attributeTransformation);
 			creator.addAttributeTransformation(transformationBuilder);
 			if (array) {
-				arrayTransformations.put(creator.getType(), transformationBuilder.getReference());
+				arrayTransformations.put(creator, transformationBuilder.getReference());
 			} else {
-				singleTransformations.put(creator.getType(), transformationBuilder.getReference());
+				singleTransformations.put(creator, transformationBuilder.getReference());
 			}
 		}
 	}
