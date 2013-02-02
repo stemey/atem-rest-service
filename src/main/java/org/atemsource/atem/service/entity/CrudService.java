@@ -13,7 +13,7 @@ public interface CrudService {
 
 	public List<String> getIds(EntityType<?> originalType);
 
-	public void update(String id, EntityType<?> originalType, UpdateCallback callback);
+	public ReturnErrorObject update(String id, EntityType<?> originalType, UpdateCallback callback);
 
 	public String create(EntityType<?> originalType, Object entity);
 

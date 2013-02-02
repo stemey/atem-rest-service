@@ -10,6 +10,7 @@ import org.atemsource.atem.api.BeanLocator;
 import org.atemsource.atem.api.infrastructure.bean.Bean;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.service.entity.CrudService;
+import org.atemsource.atem.service.entity.ReturnErrorObject;
 import org.atemsource.atem.service.entity.UpdateCallback;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
 
@@ -42,8 +43,8 @@ public class SpringBeanCrudService implements CrudService {
 	}
 
 	@Override
-	public void update(String id, EntityType<?> originalType, UpdateCallback updateCallback) {
-		updateCallback.update(findEntity(originalType, id));
+	public ReturnErrorObject update(String id, EntityType<?> originalType, UpdateCallback updateCallback) {
+		return updateCallback.update(findEntity(originalType, id));
 	}
 
 	@Override

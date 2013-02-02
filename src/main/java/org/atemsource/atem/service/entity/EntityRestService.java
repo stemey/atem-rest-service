@@ -20,10 +20,14 @@ import org.atemsource.atem.api.service.FindByTypedIdService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.impl.meta.DerivedObject;
 import org.atemsource.atem.utility.transform.api.SimpleTransformationContext;
+import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
+import org.atemsource.atem.utility.validation.SimpleValidationContext;
+import org.atemsource.atem.utility.validation.ValidationService;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class EntityRestService {
@@ -71,7 +75,7 @@ public class EntityRestService {
 			String idAsString = matcher.group(2);
 			BufferedReader reader = req.getReader();
 			JsonNode jsonNode = objectMapper.readTree(reader);
-			updateEntity(idAsString, type,jsonNode);
+			updateEntity(idAsString, type, jsonNode);
 		} else {
 			// 404
 			resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -94,20 +98,60 @@ public class EntityRestService {
 		ObjectNode json = ab.convert(entity, new SimpleTransformationContext(entityTypeRepository));
 		return json;
 	}
-	protected void updateEntity(String idAsString, String type,final Object updatedObject) {
+
+	ObjectNode createErrorNode(ReturnErrorObject returnErrorObject) {
+		ObjectNode error = objectMapper.createObjectNode();
+		ArrayNode errors = objectMapper.createArrayNode();
+		error.put("errors", errors);
+		for (org.atemsource.atem.utility.validation.AbstractValidationContext.Error e : returnErrorObject.getErrors()) {
+			ObjectNode singleError = objectMapper.createObjectNode();
+			singleError.put("path", e.getPath());
+			singleError.put("message", e.getMessage());
+			errors.add(singleError);
+		}
+		return error;
+	}
+
+	protected ObjectNode updateEntity(String idAsString, String type, final Object updatedObject) {
 		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
+		SimpleValidationContext context = new SimpleValidationContext(entityTypeRepository);
+		ValidationService validationService = entityType.getService(ValidationService.class);
+		if (validationService != null) {
+			validationService.validate(entityType, context, updatedObject);
+			if (context.getErrors().size() > 0) {
+				ReturnErrorObject returnErrorObject = new ReturnErrorObject();
+				returnErrorObject.setErrors(context.getErrors());
+				return createErrorNode(returnErrorObject);
+			}
+		}
 		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		EntityType<?> originalType = derivedType.getOriginalType();
+		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
 		CrudService crudService = originalType.getService(CrudService.class);
 		final Object currentObject = crudService.findEntity(originalType, idAsString);
-		crudService.update(idAsString,originalType, new UpdateCallback() {
-			
+		ReturnErrorObject returnErrorObject = crudService.update(idAsString, originalType, new UpdateCallback() {
+
 			@Override
-			public void update(Object entity) {
+			public ReturnErrorObject update(Object entity) {
 				UniTransformation<Object, Object> ba = (UniTransformation<Object, Object>) derivedType
 						.getTransformation().getBA();
 				ba.merge(updatedObject, currentObject, new SimpleTransformationContext(entityTypeRepository));
+				ValidationService validationService = originalType.getService(ValidationService.class);
+				if (validationService != null) {
+					SimpleValidationContext context = new SimpleValidationContext(entityTypeRepository);
+					validationService.validate(originalType, context, currentObject);
+					if (context.getErrors().size() > 0) {
+						ReturnErrorObject returnErrorObject = new ReturnErrorObject();
+						returnErrorObject.setErrors(context.getErrors());
+						return returnErrorObject;
+					}
+				}
+				return null;
 			}
 		});
+		if (returnErrorObject == null) {
+			return null;
+		} else {
+			return createErrorNode(returnErrorObject);
+		}
 	}
 }
