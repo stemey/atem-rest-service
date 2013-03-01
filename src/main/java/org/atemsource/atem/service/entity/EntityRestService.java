@@ -40,9 +40,17 @@ public class EntityRestService {
 	public void initialize() {
 		metaType = entityTypeRepository.getEntityType(EntityType.class);
 		derivedTypeAttribute = metaType.getMetaAttribute(DerivedObject.META_ATTRIBUTE_CODE);
+		pattern = Pattern.compile(uriPrefix+"/([^/]+)/([^/]+)");
 	}
+	
+	private String uriPrefix="/entity/entities";
 
-	private final Pattern pattern = Pattern.compile("/entities/([^/]+)/([^/]+)");
+	private Pattern pattern;
+	
+	public String getUri(EntityType<?> type,String id) {
+		return uriPrefix+"/"+type.getCode()+"/"+id;
+	}
+	
 	private Attribute derivedTypeAttribute;
 
 	private ObjectMapper objectMapper;
@@ -126,7 +134,7 @@ public class EntityRestService {
 		}
 		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
 		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
-		CrudService crudService = originalType.getService(CrudService.class);
+		StatefulCrudService crudService = (StatefulCrudService) originalType.getService(CrudService.class);
 		final Object currentObject = crudService.findEntity(originalType, idAsString);
 		ReturnErrorObject returnErrorObject = crudService.update(idAsString, originalType, new UpdateCallback() {
 

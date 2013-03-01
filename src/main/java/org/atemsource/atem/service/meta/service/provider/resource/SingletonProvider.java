@@ -3,6 +3,7 @@ package org.atemsource.atem.service.meta.service.provider.resource;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Observer;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -13,9 +14,13 @@ import org.atemsource.atem.api.attribute.relation.SingleAttribute;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.TypeFilter;
 import org.atemsource.atem.service.entity.CrudService;
+import org.atemsource.atem.service.entity.EntityRestService;
+import org.atemsource.atem.service.entity.ObservationService;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
 import org.atemsource.atem.service.meta.service.model.resource.Singleton;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
+import org.atemsource.atem.service.observer.ObserverInitializer;
+import org.atemsource.atem.service.observer.ObserverPublisher;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -63,6 +68,12 @@ public class SingletonProvider implements ServiceProvider<Singleton> {
 	public void setTypeFilter(TypeFilter<ObjectNode> typeFilter) {
 		this.typeFilter = typeFilter;
 	}
+	
+	@Inject
+	private ObserverPublisher observerPublisher;
+	
+	@Inject
+	private EntityRestService entityRestService;
 
 	private Singleton createSingleton(EntityType<?> viewType, EntityType<?> originalType, String id) {
 		CrudService crudService = originalType.getService(CrudService.class);
@@ -70,14 +81,19 @@ public class SingletonProvider implements ServiceProvider<Singleton> {
 			return null;
 		} else {
 			Singleton singleton = new Singleton();
-			singleton.setUriPath(uriPath + "/" + viewType.getCode() + "/" + id);
+			singleton.setUriPath(entityRestService.getUri(viewType, id));
 			singleton.setName(originalType.getCode()+"/"+id);
+			ObservationService observationService = viewType.getService(ObservationService.class);
+			if (observationService!=null) {
+				String channelPattern = observerPublisher.getChannelPattern(observationService.getScope(viewType,id),viewType.getCode(),id);
+				singleton.setTopic(channelPattern);
+			}
 			singleton.setResourceType(viewType);
 			Set<ResourceOperation> resourceOperations = new HashSet<ResourceOperation>();
-			for (ResourceOperation operation:crudService.getSupportedOperations()) {
+			for (ResourceOperation operation:crudService.getSupportedOperations(null)) {
 				resourceOperations.add(operation);
 			}
-			return singleton;
+			return singleton; 
 		}
 	}
 

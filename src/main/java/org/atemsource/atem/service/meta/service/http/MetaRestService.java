@@ -57,6 +57,7 @@ public class MetaRestService {
 		resp.setCharacterEncoding("UTF-8");
 		resp.setContentType("application/json");
 		ObjectNode json = createJson();
+		json.put("sessionId",req.getSession(true).getId());
 		objectMapper.writeValue(resp.getWriter(), json);
 	}
 
