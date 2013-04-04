@@ -5,7 +5,9 @@ package org.atemsource.atem.service.meta.service.provider.method;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -21,10 +23,7 @@ import org.atemsource.atem.service.meta.service.annotation.DocIgnore;
 import org.atemsource.atem.service.meta.service.annotation.ReturnType;
 import org.atemsource.atem.service.meta.service.model.method.Method;
 import org.atemsource.atem.service.meta.service.model.method.Param;
-import org.atemsource.atem.service.meta.service.model.method.TypeWrapper;
-import org.atemsource.atem.service.meta.service.provider.method.paramcreator.DatetimeParamCreator;
-import org.atemsource.atem.service.meta.service.provider.method.paramcreator.DefaultParamCreator;
-import org.atemsource.atem.service.meta.service.provider.method.paramcreator.EnumParamCreator;
+import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
 import org.atemsource.atem.service.meta.service.provider.method.paramcreator.ParamCreator;
 import org.atemsource.atem.service.meta.service.provider.method.paramcreator.RequestBodyCreator;
 import org.springframework.core.io.FileSystemResource;
@@ -40,37 +39,56 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * @author arnall
- * @author marsch
  */
-public class MethodProvider {
+public class MethodProvider implements ServiceProvider<Method>{
 	@Inject
 	private org.atemsource.atem.api.BeanLocator beanLocator;
+	
+	private String baseUri;
 
-	@Inject
-	private RequestBodyCreator complexParamCreator;
+	public String getBaseUri() {
+		return baseUri;
+	}
 
-	private final List<ParamCreator> creators = new ArrayList<ParamCreator>();
+	public void setBaseUri(String baseUri) {
+		this.baseUri = baseUri;
+	}
+
+	private RequestBodyCreator requestBodyCreator;
+
+	public RequestBodyCreator getRequestBodyCreator() {
+		return requestBodyCreator;
+	}
+
+	public void setRequestBodyCreator(RequestBodyCreator requestBodyCreator) {
+		this.requestBodyCreator = requestBodyCreator;
+	}
+
+	private  List<ParamCreator> creators = new ArrayList<ParamCreator>();
+
+	public void setCreators(List<ParamCreator> creators) {
+		this.creators = creators;
+	}
 
 	@Inject
 	private EntityTypeRepository entityTypeRepository;
 
-	@Inject
 	private JavadocDataStore javadocDataStore;
 
-	private List<Method> methods;
+	private Set<Method> methods;
 
-	public List<Method> getMethods() {
+	public Set<Method> getMethods() {
 		return methods;
 	}
+	
+	private String packageSearchPath;
 
 	private void createMeta() {
 		try {
-			final String packageSearchPath = "classpath*:/de/s2/sim/simyo/api/**/*.class";
 			final PathMatchingResourcePatternResolver patternResolover = new PathMatchingResourcePatternResolver();
 			final Resource[] resources = patternResolover.getResources(packageSearchPath);
 
-			methods = new ArrayList<Method>();
+			methods = new HashSet<Method>();
 			for (final Resource candidateResource : resources) {
 				List<Method> methodsInClass = processClass(candidateResource);
 				methods.addAll(methodsInClass);
@@ -80,6 +98,14 @@ public class MethodProvider {
 		} catch (final Exception e) {
 			throw new TechnicalException("cannot generate description of rest services", e);
 		}
+	}
+
+	public String getPackageSearchPath() {
+		return packageSearchPath;
+	}
+
+	public void setPackageSearchPath(String packageSearchPath) {
+		this.packageSearchPath = packageSearchPath;
 	}
 
 	private Param createParam(java.lang.reflect.Method method, Class parameterType, RequestParam requestParam) {
@@ -96,9 +122,6 @@ public class MethodProvider {
 
 	@PostConstruct
 	public void initialize() {
-		creators.add(beanLocator.getInstance(DatetimeParamCreator.class));
-		creators.add(beanLocator.getInstance(EnumParamCreator.class));
-		creators.add(beanLocator.getInstance(DefaultParamCreator.class));
 		createMeta();
 	}
 
@@ -115,7 +138,10 @@ public class MethodProvider {
 		final MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
 		final Class<?> clazz = Class.forName(metadataReader.getClassMetadata().getClassName());
 
-		ClassDescription description = javadocDataStore.getDescription(clazz);
+		ClassDescription description =null;
+		if (javadocDataStore!=null) {
+		 description = javadocDataStore.getDescription(clazz);
+		}
 
 		for (final java.lang.reflect.Method methodMetadata : clazz.getDeclaredMethods()) {
 			if (methodMetadata.isAnnotationPresent(DocIgnore.class)) {
@@ -132,6 +158,10 @@ public class MethodProvider {
 		return methods;
 	}
 
+	public List<ParamCreator> getCreators() {
+		return creators;
+	}
+
 	private Method processMethod(ClassDescription description, java.lang.reflect.Method methodMeta) throws Exception {
 		MethodDescription methodDescription = description != null ? description.getMethod(methodMeta.getName()) : null;
 		final RequestMapping requestMapping = methodMeta.getAnnotation(RequestMapping.class);
@@ -140,8 +170,9 @@ public class MethodProvider {
 		final RequestMethod requestMethod = requestMapping.method() == null || requestMapping.method().length == 0 ? RequestMethod.GET
 				: requestMapping.method()[0];
 		final Method method = new Method();
-		method.setUriPattern(uri);
+		method.setUriPattern(baseUri+uri);
 		method.setVerb(requestMethod.name());
+		method.setType("method");
 		method.setName(methodName);
 		if (methodDescription != null) {
 			method.setDescription(methodDescription.getDescription());
@@ -151,7 +182,7 @@ public class MethodProvider {
 
 		if (methodMeta.getParameterTypes().length == 1 && methodMeta.getParameterAnnotations()[0].length == 1
 				&& methodMeta.getParameterAnnotations()[0][0].annotationType().equals(RequestBody.class)) {
-			method.setRequestBody(complexParamCreator.createParam(methodMeta, methodMeta.getParameterTypes()[0]));
+			method.setRequestBody(requestBodyCreator.createParam(methodMeta, methodMeta.getParameterTypes()[0]));
 		}
 
 		method.setPathVariables(processPathVariables(methodMeta));
@@ -190,7 +221,7 @@ public class MethodProvider {
 					final Param param = new Param();
 					param.setLabel(rp.value());
 					param.setRequired(true);
-					param.setType(new TypeWrapper("text"));
+					param.setType("string");
 					param.setCode(rp.value());
 					params.add(param);
 				}
@@ -205,5 +236,10 @@ public class MethodProvider {
 			EntityType<?> returnType = entityTypeRepository.getEntityType(returnTypeAnnotation.value());
 			method.setReturnType(returnType);
 		}
+	}
+
+	@Override
+	public Set<Method> getServices() {
+		return methods;
 	}
 }

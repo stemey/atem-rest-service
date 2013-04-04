@@ -93,6 +93,7 @@ public class SingletonProvider implements ServiceProvider<Singleton> {
 			for (ResourceOperation operation:crudService.getSupportedOperations(null)) {
 				resourceOperations.add(operation);
 			}
+			singleton.setType("singleton");
 			return singleton; 
 		}
 	}

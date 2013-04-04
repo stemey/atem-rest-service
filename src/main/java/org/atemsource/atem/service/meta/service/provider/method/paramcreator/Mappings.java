@@ -9,7 +9,6 @@ import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
 
-@Component
 public class Mappings
 {
 
@@ -39,12 +38,12 @@ public class Mappings
 	@PostConstruct
 	public void initialize()
 	{
-		classToType.put(String.class, "text");
+		classToType.put(String.class, "string");
 		classToType.put(DateTime.class, "date");
-		classToType.put(Integer.class, "Integer");
-		classToType.put(int.class, "Integer");
-		classToType.put(Long.class, "Long");
-		classToType.put(long.class, "Long");
+		classToType.put(Integer.class, "number");
+		classToType.put(int.class, "number");
+		classToType.put(Long.class, "number");
+		classToType.put(long.class, "number");
 	}
 
 }

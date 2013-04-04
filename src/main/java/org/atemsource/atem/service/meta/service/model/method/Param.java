@@ -2,9 +2,7 @@ package org.atemsource.atem.service.meta.service.model.method;
 
 import org.atemsource.atem.api.attribute.annotation.Association;
 
-
-public class Param
-{
+public class Param {
 
 	private static final long serialVersionUID = -2129097756291034471L;
 
@@ -20,102 +18,83 @@ public class Param
 
 	private boolean required;
 
-	private TypeWrapper type;
+	private String type;
 
 	private boolean writable;
 
-	public String getCode()
-	{
+	public String getCode() {
 		return code;
 	}
 
-	public String getDescription()
-	{
+	public String getDescription() {
 		return description;
 	}
 
-	public String getEditor()
-	{
+	public String getEditor() {
 		return editor;
 	}
 
-	public String getLabel()
-	{
+	public String getLabel() {
 		return label;
 	}
 
-	public TypeWrapper getType()
-	{
-		return type;
-	}
-
-	public boolean isArray()
-	{
+	public boolean isArray() {
 		return array;
 	}
 
-	public boolean isRequired()
-	{
+	public boolean isRequired() {
 		return required;
 	}
 
-	public boolean isWritable()
-	{
+	public boolean isWritable() {
 		return writable;
 	}
 
-	public void setArray(boolean array)
-	{
+	public void setArray(boolean array) {
 		this.array = array;
 	}
 
-	public void setCode(String code)
-	{
+	public void setCode(String code) {
 		this.code = code;
 	}
 
-	public void setDescription(String description)
-	{
+	public void setDescription(String description) {
 		this.description = description;
 	}
 
-	public void setEditor(String editor)
-	{
+	public void setEditor(String editor) {
 		this.editor = editor;
 	}
 
-	public void setLabel(String name)
-	{
+	public void setLabel(String name) {
 		this.label = name;
 	}
 
-	public void setRequired(boolean required)
-	{
+	public void setRequired(boolean required) {
 		this.required = required;
 	}
 
-	public void setType(TypeWrapper type)
-	{
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
 		this.type = type;
 	}
 
-	public void setWritable(boolean writable)
-	{
+	public void setWritable(boolean writable) {
 		this.writable = writable;
 	}
 
-	public static class Values
-	{
+	public static class Values {
 		@Association(targetType = String.class)
 		private String[] elements;
 
-		public String[] getElements()
-		{
+		public String[] getElements() {
 			return elements;
 		}
 
-		public void setElements(String[] elements)
-		{
+		public void setElements(String[] elements) {
 			this.elements = elements;
 		}
 	}

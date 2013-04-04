@@ -2,7 +2,6 @@ package org.atemsource.atem.service.meta.service.provider.method.paramcreator;
 
 
 import org.atemsource.atem.service.meta.service.model.method.Param;
-import org.atemsource.atem.service.meta.service.model.method.TypeWrapper;
 
 import javax.inject.Inject;
 import org.atemsource.atem.api.EntityTypeRepository;
@@ -15,8 +14,15 @@ public abstract class AbstractParamCreator implements ParamCreator
 	@Inject
 	protected EntityTypeRepository entityTypeRepository;
 
-	@Inject
-	protected Mappings mappings;
+	private  Mappings mappings;
+
+	public Mappings getMappings() {
+		return mappings;
+	}
+
+	public void setMappings(Mappings mappings) {
+		this.mappings = mappings;
+	}
 
 	protected void setStandardProperties(java.lang.reflect.Method method, Class parameterType,
 		RequestParam requestParam, Param param)
@@ -38,6 +44,6 @@ public abstract class AbstractParamCreator implements ParamCreator
 			param.setEditor(mappings.getEditor(parameterType));
 		}
 
-		param.setType(new TypeWrapper(type));
+		param.setType(type);
 	}
 }
