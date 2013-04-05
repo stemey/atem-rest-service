@@ -6,19 +6,25 @@ package org.atemsource.atem.service.meta.service.provider.method;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.atemsource.atem.api.EntityTypeRepository;
+import org.atemsource.atem.api.attribute.Attribute;
+import org.atemsource.atem.api.attribute.JavaMetaData;
 import org.atemsource.atem.api.infrastructure.exception.TechnicalException;
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.api.type.EntityTypeBuilder;
 import org.atemsource.atem.doc.javadoc.JavadocDataStore;
 import org.atemsource.atem.doc.javadoc.model.ClassDescription;
 import org.atemsource.atem.doc.javadoc.model.MethodDescription;
 import org.atemsource.atem.doc.javadoc.model.ParamDescription;
+import org.atemsource.atem.impl.common.method.MethodFactory;
 import org.atemsource.atem.service.meta.service.annotation.DocIgnore;
 import org.atemsource.atem.service.meta.service.annotation.ReturnType;
 import org.atemsource.atem.service.meta.service.model.method.Method;
@@ -26,6 +32,10 @@ import org.atemsource.atem.service.meta.service.model.method.Param;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
 import org.atemsource.atem.service.meta.service.provider.method.paramcreator.ParamCreator;
 import org.atemsource.atem.service.meta.service.provider.method.paramcreator.RequestBodyCreator;
+import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
+import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
+import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
+import org.codehaus.jackson.JsonNode;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -40,10 +50,42 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  */
-public class MethodProvider implements ServiceProvider<Method>{
+public class MethodProvider implements ServiceProvider<Method> {
+	public JavadocDataStore getJavadocDataStore() {
+		return javadocDataStore;
+	}
+
+	public void setJavadocDataStore(JavadocDataStore javadocDataStore) {
+		this.javadocDataStore = javadocDataStore;
+	}
+
+	public MethodFactory getMethodFactory() {
+		return methodFactory;
+	}
+
+	public void setMethodFactory(MethodFactory methodFactory) {
+		this.methodFactory = methodFactory;
+	}
+
+	public TransformationBuilderFactory getTransformationBuilderFactory() {
+		return transformationBuilderFactory;
+	}
+
+	public void setTransformationBuilderFactory(TransformationBuilderFactory transformationBuilderFactory) {
+		this.transformationBuilderFactory = transformationBuilderFactory;
+	}
+
+	public DynamicEntityTypeSubrepository<?> getJsonRepository() {
+		return jsonRepository;
+	}
+
+	public void setJsonRepository(DynamicEntityTypeSubrepository<?> jsonRepository) {
+		this.jsonRepository = jsonRepository;
+	}
+
 	@Inject
 	private org.atemsource.atem.api.BeanLocator beanLocator;
-	
+
 	private String baseUri;
 
 	public String getBaseUri() {
@@ -64,7 +106,7 @@ public class MethodProvider implements ServiceProvider<Method>{
 		this.requestBodyCreator = requestBodyCreator;
 	}
 
-	private  List<ParamCreator> creators = new ArrayList<ParamCreator>();
+	private List<ParamCreator> creators = new ArrayList<ParamCreator>();
 
 	public void setCreators(List<ParamCreator> creators) {
 		this.creators = creators;
@@ -80,23 +122,25 @@ public class MethodProvider implements ServiceProvider<Method>{
 	public Set<Method> getMethods() {
 		return methods;
 	}
-	
+
 	private String packageSearchPath;
 
 	private void createMeta() {
-		try {
-			final PathMatchingResourcePatternResolver patternResolover = new PathMatchingResourcePatternResolver();
-			final Resource[] resources = patternResolover.getResources(packageSearchPath);
+		if (StringUtils.isNotEmpty(packageSearchPath)) {
+			try {
+				final PathMatchingResourcePatternResolver patternResolover = new PathMatchingResourcePatternResolver();
+				final Resource[] resources = patternResolover.getResources(packageSearchPath);
 
-			methods = new HashSet<Method>();
-			for (final Resource candidateResource : resources) {
-				List<Method> methodsInClass = processClass(candidateResource);
-				methods.addAll(methodsInClass);
+				methods = new HashSet<Method>();
+				for (final Resource candidateResource : resources) {
+					List<Method> methodsInClass = processClass(candidateResource);
+					methods.addAll(methodsInClass);
 
+				}
+
+			} catch (final Exception e) {
+				throw new TechnicalException("cannot generate description of rest services", e);
 			}
-
-		} catch (final Exception e) {
-			throw new TechnicalException("cannot generate description of rest services", e);
 		}
 	}
 
@@ -125,8 +169,6 @@ public class MethodProvider implements ServiceProvider<Method>{
 		createMeta();
 	}
 
-
-
 	@SuppressWarnings("unchecked")
 	private List<Method> processClass(Resource candidateResource) throws Exception {
 		List<Method> methods = new ArrayList<Method>();
@@ -138,9 +180,15 @@ public class MethodProvider implements ServiceProvider<Method>{
 		final MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
 		final Class<?> clazz = Class.forName(metadataReader.getClassMetadata().getClassName());
 
-		ClassDescription description =null;
-		if (javadocDataStore!=null) {
-		 description = javadocDataStore.getDescription(clazz);
+		methods.addAll(createMeta( clazz));
+		return methods;
+	}
+
+	public List<Method> createMeta(final Class<?> clazz)  {
+		List<Method> methods= new LinkedList<Method>();
+		ClassDescription description = null;
+		if (javadocDataStore != null) {
+			description = javadocDataStore.getDescription(clazz);
 		}
 
 		for (final java.lang.reflect.Method methodMetadata : clazz.getDeclaredMethods()) {
@@ -162,7 +210,7 @@ public class MethodProvider implements ServiceProvider<Method>{
 		return creators;
 	}
 
-	private Method processMethod(ClassDescription description, java.lang.reflect.Method methodMeta) throws Exception {
+	private Method processMethod(ClassDescription description, java.lang.reflect.Method methodMeta) {
 		MethodDescription methodDescription = description != null ? description.getMethod(methodMeta.getName()) : null;
 		final RequestMapping requestMapping = methodMeta.getAnnotation(RequestMapping.class);
 		final String uri = requestMapping.value()[0];
@@ -170,7 +218,7 @@ public class MethodProvider implements ServiceProvider<Method>{
 		final RequestMethod requestMethod = requestMapping.method() == null || requestMapping.method().length == 0 ? RequestMethod.GET
 				: requestMapping.method()[0];
 		final Method method = new Method();
-		method.setUriPattern(baseUri+uri);
+		method.setUriPattern(baseUri + uri);
 		method.setVerb(requestMethod.name());
 		method.setType("method");
 		method.setName(methodName);
@@ -190,44 +238,41 @@ public class MethodProvider implements ServiceProvider<Method>{
 		return method;
 	}
 
-	private List<Param> processParams(java.lang.reflect.Method methodMeta, MethodDescription methodDescription) {
-		final List<Param> params = new ArrayList<Param>();
-
-		for (int index = 0; index < methodMeta.getParameterTypes().length; index++) {
-			for (final Annotation annotation : methodMeta.getParameterAnnotations()[index]) {
-				if (annotation.annotationType().equals(RequestParam.class)) {
-					final RequestParam rp = (RequestParam) annotation;
-					Param param = createParam(methodMeta, methodMeta.getParameterTypes()[index], rp);
-					if (methodDescription != null && methodDescription.getParameters().size() > index) {
-						ParamDescription paramDescription = methodDescription.getParameters().get(index);
-						param.setDescription(paramDescription.getDescription());
-					}
-					if (param != null) {
-						params.add(param);
-					}
-				}
+	private EntityType<?> processParams(java.lang.reflect.Method methodMeta, MethodDescription methodDescription) {
+		org.atemsource.atem.api.method.Method method = methodFactory.create(methodMeta);
+		EntityTypeBuilder builder = jsonRepository.createBuilder("request-param:" +method.getParameterType().getCode());
+		TypeTransformationBuilder<Object[], ?> transformationBuilder = transformationBuilderFactory.create(
+				method.getParameterType(), builder);
+		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes()) {
+			RequestParam requestParam = ((JavaMetaData) parameter).getAnnotation(RequestParam.class);
+			if (requestParam != null) {
+				transformationBuilder.transform().from(parameter.getCode()).to(requestParam.value());
 			}
 		}
-
-		return params;
+		transformationBuilder.buildTypeTransformation();
+		return builder.getReference();
 	}
 
-	private List<Param> processPathVariables(java.lang.reflect.Method methodMeta) {
-		final List<Param> params = new ArrayList<Param>();
-		for (final Annotation[] annotations : methodMeta.getParameterAnnotations()) {
-			for (final Annotation annotation : annotations) {
-				if (annotation.annotationType().equals(PathVariable.class)) {
-					final PathVariable rp = (PathVariable) annotation;
-					final Param param = new Param();
-					param.setLabel(rp.value());
-					param.setRequired(true);
-					param.setType("string");
-					param.setCode(rp.value());
-					params.add(param);
-				}
+	@Inject
+	private MethodFactory methodFactory;
+
+	private TransformationBuilderFactory transformationBuilderFactory;
+	private DynamicEntityTypeSubrepository<?> jsonRepository;
+
+	private EntityType<?> processPathVariables(java.lang.reflect.Method methodMeta) {
+		org.atemsource.atem.api.method.Method method = methodFactory.create(methodMeta);
+		EntityTypeBuilder builder = jsonRepository.createBuilder("request-pathvariables:" +method.getParameterType().getCode());
+		TypeTransformationBuilder<Object[], ?> transformationBuilder = transformationBuilderFactory.create(
+				method.getParameterType(), builder);
+		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes()) {
+			PathVariable pathVariable = ((JavaMetaData) parameter).getAnnotation(PathVariable.class);
+			if (pathVariable != null) {
+				transformationBuilder.transform().from(parameter.getCode()).to(pathVariable.value());
 			}
 		}
-		return params;
+		transformationBuilder.buildTypeTransformation();
+		return builder.getReference();
+
 	}
 
 	private void setReturnTypeFromAnnotation(java.lang.reflect.Method methodMeta, final Method method) {

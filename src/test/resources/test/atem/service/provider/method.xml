@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Stefan Meyer, 2012 Licensed under the Apache License, Version 2.0 (the 
+	"License"); you may not use this file except in compliance with the License. 
+	You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 
+	Unless required by applicable law or agreed to in writing, software distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
+	the specific language governing permissions and limitations under the License. -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+           http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+
+
+
+<!-- 	<import resource="classpath:/atem/jackson/entitytype-example.xml" /> -->
+<!-- 	<import resource="classpath:/meta/utility/transform-complete.xml" /> -->
+<!-- 	<import resource="classpath:/atem/annotation/entitytype.xml" /> -->
+
+	<import resource="classpath:/atem/service/meta/editor.xml" />
+	<import resource="classpath:/atem/impl/method.xml" />
+	<import resource="classpath:/meta/utility/binding.xml" />
+
+
+	<context:component-scan base-package="org.atemsource.atem.service.meta.service.provider.method.example">
+	</context:component-scan>
+	
+
+
+	<bean id="example-repository" parent="abstract-atem-scanned-pojo-repository">
+		<property name="includedPackage"
+			value="org.atemsource.atem.service.meta.service.provider.method.example" />
+	</bean>
+	
+	<bean id="atem-repository"
+		class="org.atemsource.atem.impl.common.EntityTypeRepositoryImpl"
+		init-method="init">
+		<property name="repositories">
+			<list>
+				<ref bean="atem-entityType-repository" />
+				<ref bean="atem-attribute-repository" />
+				<ref bean="atem-transformation-subrepository" />
+				<ref bean="atem-json-repository" />
+				<ref bean="example-repository" />
+			</list>
+		</property>
+	</bean>
+
+
+	<bean id="service-binder" class="org.atemsource.atem.utility.binding.Binder">
+		<property name="typeFilter" ref="example-repository" />
+		<property name="subRepository" ref="atem-json-repository" />
+		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
+		<property name="typeNameConverter">
+			<bean class="org.atemsource.atem.utility.binding.PrefixTypeNameConverter">
+				<property name="prefix" value="json-meta" />
+			</bean>
+		</property>
+	</bean>
+
+
+
+	<bean id="atem-json-repository" class="org.atemsource.atem.impl.json.JsonEntityTypeRepository">
+		<property name="objectMapper">
+			<bean class="org.codehaus.jackson.map.ObjectMapper" />
+		</property>
+	</bean>
+
+	<bean
+		class="org.atemsource.atem.service.meta.service.provider.method.MethodProvider">
+		<property name="jsonRepository" ref="atem-json-repository"/>
+		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory"/>
+		<property name="baseUri"
+			value="/spring">
+		</property>
+		<property name="requestBodyCreator">
+			<bean class="org.atemsource.atem.service.meta.service.provider.method.paramcreator.BoundRequestBodyCreator">
+				<property name="binder" ref="service-binder"/>
+			</bean>
+		</property>
+	</bean>
+
+
+</beans>
