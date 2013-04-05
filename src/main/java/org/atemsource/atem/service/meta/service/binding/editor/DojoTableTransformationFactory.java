@@ -30,7 +30,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class DojoTableTransformationFactory {
 	private static final String SCHEMA_TYPE_CODE = "dojoTableLayout";
 
-	private static Logger logger = Logger.getLogger(EditorTransformationFactory.class);
+	private static Logger logger = Logger.getLogger(DojoTableTransformationFactory.class);
 
 	@Inject
 	private EntityTypeRepository entityTypeRepository;

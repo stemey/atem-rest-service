@@ -6,7 +6,6 @@ import org.atemsource.atem.impl.dynamic.DynamicEntityTypeRepository;
 import org.atemsource.atem.service.meta.service.binding.editor.EditorTransformationFactory;
 import org.atemsource.atem.service.meta.service.model.Meta;
 import org.atemsource.atem.service.meta.service.model.method.Method;
-import org.atemsource.atem.service.meta.service.model.method.Param;
 import org.atemsource.atem.utility.binding.Binder;
 import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
@@ -35,7 +34,6 @@ public class ResourceTransformationFactory
 	public void initialize()
 	{
 
-		EntityTypeTransformation<Param, Object> paramTransformation = binder.getTransformation(Param.class);
 
 		TypeTransformationBuilder<Method, ?> methodBuilder =
 			transformationBuilderFactory.create(Method.class, subRepository.createBuilder("editor.resource"));
