@@ -6,6 +6,7 @@ import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
 import org.atemsource.atem.api.type.primitive.IntegerType;
 import org.atemsource.atem.service.meta.service.binding.AttributeMixin;
+import org.atemsource.atem.service.meta.service.binding.ClassUtils;
 import org.atemsource.atem.service.meta.service.binding.attributetype.AttributeTransformationCreator;
 import org.atemsource.atem.utility.transform.api.JavaUniConverter;
 import org.atemsource.atem.utility.transform.api.TransformationContext;

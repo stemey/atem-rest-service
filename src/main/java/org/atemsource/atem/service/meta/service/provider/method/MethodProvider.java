@@ -136,14 +136,15 @@ public class MethodProvider implements ServiceProvider<Method> {
 	private List<Method> processClass(Resource candidateResource) throws Exception {
 		List<Method> methods = new ArrayList<Method>();
 		final FileSystemResource resource = (FileSystemResource) candidateResource;
+		if (resource.getFilename().endsWith(".class")) {
+			final PathMatchingResourcePatternResolver patternResolover = new PathMatchingResourcePatternResolver();
+			final MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(patternResolover);
 
-		final PathMatchingResourcePatternResolver patternResolover = new PathMatchingResourcePatternResolver();
-		final MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(patternResolover);
+			final MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
+			final Class<?> clazz = Class.forName(metadataReader.getClassMetadata().getClassName());
 
-		final MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
-		final Class<?> clazz = Class.forName(metadataReader.getClassMetadata().getClassName());
-
-		methods.addAll(createMeta(clazz));
+			methods.addAll(createMeta(clazz));
+		}
 		return methods;
 	}
 
@@ -155,7 +156,7 @@ public class MethodProvider implements ServiceProvider<Method> {
 				continue;
 			}
 			if (methodMetadata.isAnnotationPresent(RequestMapping.class)) {
-				final Method method = processMethod( methodMetadata);
+				final Method method = processMethod(methodMetadata);
 				if (method != null) {
 					methods.add(method);
 				}
@@ -165,7 +166,7 @@ public class MethodProvider implements ServiceProvider<Method> {
 		return methods;
 	}
 
-	private Method processMethod( java.lang.reflect.Method methodMeta) {
+	private Method processMethod(java.lang.reflect.Method methodMeta) {
 		final RequestMapping requestMapping = methodMeta.getAnnotation(RequestMapping.class);
 		final String uri = requestMapping.value()[0];
 		final String methodName = methodMeta.getName();
