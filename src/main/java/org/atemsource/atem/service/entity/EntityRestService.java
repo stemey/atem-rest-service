@@ -19,6 +19,7 @@ import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.service.FindByTypedIdService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.impl.meta.DerivedObject;
+import org.atemsource.atem.utility.transform.api.JacksonTransformationContext;
 import org.atemsource.atem.utility.transform.api.SimpleTransformationContext;
 import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
@@ -103,7 +104,7 @@ public class EntityRestService {
 		Object entity = crudService.findEntity(originalType, idAsString);
 		UniTransformation<Object, ObjectNode> ab = (UniTransformation<Object, ObjectNode>) derivedType
 				.getTransformation().getAB();
-		ObjectNode json = ab.convert(entity, new SimpleTransformationContext(entityTypeRepository));
+		ObjectNode json = ab.convert(entity, new JacksonTransformationContext(entityTypeRepository));
 		return json;
 	}
 
@@ -142,7 +143,7 @@ public class EntityRestService {
 			public ReturnErrorObject update(Object entity) {
 				UniTransformation<Object, Object> ba = (UniTransformation<Object, Object>) derivedType
 						.getTransformation().getBA();
-				ba.merge(updatedObject, currentObject, new SimpleTransformationContext(entityTypeRepository));
+				ba.merge(updatedObject, currentObject, new JacksonTransformationContext(entityTypeRepository));
 				ValidationService validationService = originalType.getService(ValidationService.class);
 				if (validationService != null) {
 					SimpleValidationContext context = new SimpleValidationContext(entityTypeRepository);
