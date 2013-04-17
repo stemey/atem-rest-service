@@ -4,16 +4,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.atemsource.atem.api.BeanLocator;
+import org.atemsource.atem.api.attribute.Attribute;
+import org.atemsource.atem.api.attribute.JavaMetaData;
 import org.atemsource.atem.api.infrastructure.bean.Bean;
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.api.view.View;
+import org.atemsource.atem.api.view.ViewVisitor;
+import org.atemsource.atem.api.view.Visitor;
 import org.atemsource.atem.service.entity.CrudService;
+import org.atemsource.atem.service.entity.ObservationService;
+import org.atemsource.atem.service.entity.ReturnErrorObject;
+import org.atemsource.atem.service.entity.StatefulCrudService;
 import org.atemsource.atem.service.entity.UpdateCallback;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
+import org.atemsource.atem.utility.compare.Comparison;
+import org.atemsource.atem.utility.compare.ComparisonBuilder;
+import org.atemsource.atem.utility.observer.EntityHandle;
+import org.atemsource.atem.utility.observer.EntityObserver;
+import org.atemsource.atem.utility.observer.EntityObserverDefinition;
 
-public class SpringBeanCrudService implements CrudService {
+public class SpringBeanCrudService implements  StatefulCrudService {
 
 	@Inject
 	private BeanLocator beanLocator;
@@ -26,7 +40,7 @@ public class SpringBeanCrudService implements CrudService {
 	}
 
 	@Override
-	public <E> E findEntity(EntityType<?> entityType, String id) {
+	public <E> E findEntity(EntityType<E> entityType, String id) {
 		return beanLocator.getInstance(id);
 	}
 
@@ -42,8 +56,8 @@ public class SpringBeanCrudService implements CrudService {
 	}
 
 	@Override
-	public void update(String id, EntityType<?> originalType, UpdateCallback updateCallback) {
-		updateCallback.update(findEntity(originalType, id));
+	public ReturnErrorObject update(String id, EntityType<?> originalType, UpdateCallback updateCallback) {
+		return updateCallback.update(findEntity(originalType, id));
 	}
 
 	@Override
@@ -57,8 +71,9 @@ public class SpringBeanCrudService implements CrudService {
 	}
 
 	@Override
-	public ResourceOperation[] getSupportedOperations() {
+	public ResourceOperation[] getSupportedOperations(EntityType<?> entityType) {
 		return supportedOperations;
 	}
+
 
 }

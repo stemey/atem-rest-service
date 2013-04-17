@@ -9,16 +9,15 @@ public interface CrudService {
 
 	public String getIdAsString(EntityType<?> entityType, Object entity);
 
-	public <E> E findEntity(EntityType<?> entityType, String id);
+	public <E> E findEntity(EntityType<E> entityType, String id);
 
 	public List<String> getIds(EntityType<?> originalType);
 
-	public void update(String id, EntityType<?> originalType, UpdateCallback callback);
 
 	public String create(EntityType<?> originalType, Object entity);
 
 	public void delete(EntityType<?> originalType, String id);
 
-	public ResourceOperation[] getSupportedOperations();
+	public ResourceOperation[] getSupportedOperations(EntityType<?> entityType);
 
 }

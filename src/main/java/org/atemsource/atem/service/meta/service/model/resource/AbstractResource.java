@@ -22,6 +22,16 @@ public class AbstractResource extends Service {
 	public EntityType<?> getResourceType() {
 		return resourceType;
 	}
+	
+	private String topic;
+
+	public String getTopic() {
+		return topic;
+	}
+
+	public void setTopic(String topic) {
+		this.topic = topic;
+	}
 
 	public void setResourceType(EntityType<?> resourceType) {
 		this.resourceType = resourceType;

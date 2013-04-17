@@ -6,15 +6,12 @@ import org.atemsource.atem.impl.dynamic.DynamicEntityTypeRepository;
 import org.atemsource.atem.service.meta.service.binding.editor.EditorTransformationFactory;
 import org.atemsource.atem.service.meta.service.model.Meta;
 import org.atemsource.atem.service.meta.service.model.method.Method;
-import org.atemsource.atem.service.meta.service.model.method.Param;
 import org.atemsource.atem.utility.binding.Binder;
 import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 
-
-public class MethodTransformationFactory
-{
+public class MethodTransformationFactory {
 
 	private Binder binder;
 
@@ -26,52 +23,44 @@ public class MethodTransformationFactory
 
 	private TransformationBuilderFactory transformationBuilderFactory;
 
-	public EntityTypeTransformation<Meta, ?> getMetaTransformation()
-	{
+	public EntityTypeTransformation<Meta, ?> getMetaTransformation() {
 		return metaTransformation;
 	}
 
 	@PostConstruct
-	public void initialize()
-	{
+	public void initialize() {
 
-		EntityTypeTransformation<Param, Object> paramTransformation = binder.getTransformation(Param.class);
-
-		TypeTransformationBuilder<Method, ?> methodBuilder =
-			transformationBuilderFactory.create(Method.class, subRepository.createBuilder("editor.method"));
+		TypeTransformationBuilder<Method, ?> methodBuilder = transformationBuilderFactory.create(Method.class,
+				subRepository.createBuilder("editor.method"));
 
 		methodBuilder.transform().from("name");
 		methodBuilder.transform().from("description");
 		methodBuilder.transform().from("uriPattern");
 		methodBuilder.transform().from("verb");
-		methodBuilder.transformCollection().from("params").convert(paramTransformation);
-		methodBuilder.transformCollection().from("pathVariables").convert(paramTransformation);
+		methodBuilder.transformCollection().from("params").convert(editorTransformationFactory.getTransformation());
+		methodBuilder.transformCollection().from("pathVariables").convert(editorTransformationFactory.getTransformation());
 		methodBuilder.transform().from("requestBody").convert(editorTransformationFactory.getTransformation());
 		EntityTypeTransformation<Method, ?> methodTransformation = methodBuilder.buildTypeTransformation();
-
-		TypeTransformationBuilder<Meta, ?> metaBuilder =
-			transformationBuilderFactory.create(Meta.class, subRepository.createBuilder("editor.service"));
+ 
+		TypeTransformationBuilder<Meta, ?> metaBuilder = transformationBuilderFactory.create(Meta.class,
+				subRepository.createBuilder("editor.service"));
 		metaBuilder.transformMap().from("methods").to("methods").convert(methodTransformation);
 		this.metaTransformation = metaBuilder.buildTypeTransformation();
 	}
 
-	public void setBinder(Binder binder)
-	{
+	public void setBinder(Binder binder) {
 		this.binder = binder;
 	}
 
-	public void setEditorBuilder(EditorTransformationFactory editorTransformationFactory)
-	{
+	public void setEditorBuilder(EditorTransformationFactory editorTransformationFactory) {
 		this.editorTransformationFactory = editorTransformationFactory;
 	}
 
-	public void setMetaTransformation(EntityTypeTransformation<Meta, ?> metaTransformation)
-	{
+	public void setMetaTransformation(EntityTypeTransformation<Meta, ?> metaTransformation) {
 		this.metaTransformation = metaTransformation;
 	}
 
-	public void setSubRepository(DynamicEntityTypeRepository subRepository)
-	{
+	public void setSubRepository(DynamicEntityTypeRepository subRepository) {
 		this.subRepository = subRepository;
 	}
 }

@@ -11,15 +11,29 @@ import org.atemsource.atem.utility.transform.api.annotation.Conversion;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.ObjectMapper;
 
+public class Method extends Service {
 
-public class Method extends Service
-{
+	@Conversion(EditorConversion.class)
+	private EntityType<?> params;
 
-	@Association(targetType = Param.class)
-	private List<Param> params;
+	public EntityType<?> getParams() {
+		return params;
+	}
 
-	@Association(targetType = Param.class)
-	private List<Param> pathVariables;
+	public void setParams(EntityType<?> params) {
+		this.params = params;
+	}
+
+	public EntityType<?> getPathVariables() {
+		return pathVariables;
+	}
+
+	public void setPathVariables(EntityType<?> pathVariables) {
+		this.pathVariables = pathVariables;
+	}
+
+	@Conversion(EditorConversion.class)
+	private EntityType<?> pathVariables;
 
 	@Conversion(EditorConversion.class)
 	private EntityType<?> requestBody;
@@ -31,89 +45,47 @@ public class Method extends Service
 
 	private String verb;
 
-	public Method()
-	{
+	public Method() {
 	}
 
-	public void addParam(Param param)
-	{
-		params.add(param);
-	}
-
-
-
-	public List<Param> getParams()
-	{
-		return params;
-	}
-
-	public List<Param> getPathVariables()
-	{
-		return pathVariables;
-	}
-
-	public EntityType<?> getRequestBody()
-	{
+	public EntityType<?> getRequestBody() {
 		return requestBody;
 	}
 
-	public Type<?> getReturnType()
-	{
+	public Type<?> getReturnType() {
 		return returnType;
 	}
 
-	public String getUriPattern()
-	{
+	public String getUriPattern() {
 		return uriPattern;
 	}
 
-	public String getVerb()
-	{
+	public String getVerb() {
 		return verb;
 	}
 
-
-
-	public void setParams(List<Param> params)
-	{
-		this.params = params;
-	}
-
-	public void setPathVariables(List<Param> pathVariables)
-	{
-		this.pathVariables = pathVariables;
-	}
-
-	public void setRequestBody(EntityType<?> requestBody)
-	{
+	public void setRequestBody(EntityType<?> requestBody) {
 		this.requestBody = requestBody;
 	}
 
-	public void setReturnType(Type<?> returnType)
-	{
+	public void setReturnType(Type<?> returnType) {
 		this.returnType = returnType;
 	}
 
-	public void setUriPattern(String uriPattern)
-	{
+	public void setUriPattern(String uriPattern) {
 		this.uriPattern = uriPattern;
 	}
 
-	public void setVerb(String verb)
-	{
+	public void setVerb(String verb) {
 		this.verb = verb;
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		String result = null;
-		try
-		{
+		try {
 			result = new ObjectMapper().writeValueAsString(this);
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			// ignore
 		}
 		return result;

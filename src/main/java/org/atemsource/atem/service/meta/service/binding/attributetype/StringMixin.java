@@ -1,7 +1,6 @@
 package org.atemsource.atem.service.meta.service.binding.attributetype;
 
 import org.atemsource.atem.api.attribute.Attribute;
-import org.atemsource.atem.api.type.primitive.TextType;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.api.constraint.DateFormat;
 import org.atemsource.atem.utility.transform.api.constraint.PossibleValues;
@@ -26,7 +25,6 @@ public class StringMixin implements AttributeTransformationCreator {
 
 	protected void extend(TypeTransformationBuilder<Attribute, ?> transformationBuilder) {
 	}
-
 
 	@Override
 	public String getTargetName() {
