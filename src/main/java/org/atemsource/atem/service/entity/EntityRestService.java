@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.atemsource.atem.api.BeanLocator;
 import org.atemsource.atem.api.EntityTypeRepository;
 import org.atemsource.atem.api.attribute.Attribute;
-import org.atemsource.atem.api.service.FindByTypedIdService;
+import org.atemsource.atem.api.service.FindByIdService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.impl.meta.DerivedObject;
 import org.atemsource.atem.utility.transform.api.JacksonTransformationContext;
@@ -100,8 +100,8 @@ public class EntityRestService {
 		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
 		DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
 		EntityType<?> originalType = derivedType.getOriginalType();
-		CrudService crudService = originalType.getService(CrudService.class);
-		Object entity = crudService.findEntity(originalType, idAsString);
+		FindByIdService findByIdService = originalType.getService(FindByIdService.class);
+		Object entity = findByIdService.findById(originalType, idAsString);
 		UniTransformation<Object, ObjectNode> ab = (UniTransformation<Object, ObjectNode>) derivedType
 				.getTransformation().getAB();
 		ObjectNode json = ab.convert(entity, new JacksonTransformationContext(entityTypeRepository));
@@ -135,8 +135,9 @@ public class EntityRestService {
 		}
 		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
 		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
-		StatefulCrudService crudService = (StatefulCrudService) originalType.getService(CrudService.class);
-		final Object currentObject = crudService.findEntity(originalType, idAsString);
+		FindByIdService findByIdService = originalType.getService(FindByIdService.class);
+		StatefulUpdateService crudService = originalType.getService(StatefulUpdateService.class);
+		final Object currentObject = findByIdService.findById(originalType, idAsString);
 		ReturnErrorObject returnErrorObject = crudService.update(idAsString, originalType, new UpdateCallback() {
 
 			@Override
