@@ -19,8 +19,6 @@ import org.atemsource.atem.api.attribute.JavaMetaData;
 import org.atemsource.atem.api.infrastructure.exception.TechnicalException;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
-import org.atemsource.atem.doc.javadoc.model.ClassDescription;
-import org.atemsource.atem.doc.javadoc.model.MethodDescription;
 import org.atemsource.atem.impl.common.method.MethodFactory;
 import org.atemsource.atem.service.meta.service.annotation.DocIgnore;
 import org.atemsource.atem.service.meta.service.annotation.ReturnType;
@@ -42,102 +40,134 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+
 /**
  */
-public class MethodProvider implements ServiceProvider<Method> {
-	public MethodFactory getMethodFactory() {
-		return methodFactory;
-	}
-
-	public void setMethodFactory(MethodFactory methodFactory) {
-		this.methodFactory = methodFactory;
-	}
-
-	public TransformationBuilderFactory getTransformationBuilderFactory() {
-		return transformationBuilderFactory;
-	}
-
-	public void setTransformationBuilderFactory(TransformationBuilderFactory transformationBuilderFactory) {
-		this.transformationBuilderFactory = transformationBuilderFactory;
-	}
-
-	public DynamicEntityTypeSubrepository<?> getJsonRepository() {
-		return jsonRepository;
-	}
-
-	public void setJsonRepository(DynamicEntityTypeSubrepository<?> jsonRepository) {
-		this.jsonRepository = jsonRepository;
-	}
-
+public class MethodProvider implements ServiceProvider<Method>
+{
 	private String baseUri;
-
-	public String getBaseUri() {
-		return baseUri;
-	}
-
-	public void setBaseUri(String baseUri) {
-		this.baseUri = baseUri;
-	}
-
-	private RequestBodyCreator requestBodyCreator;
-
-	public RequestBodyCreator getRequestBodyCreator() {
-		return requestBodyCreator;
-	}
-
-	public void setRequestBodyCreator(RequestBodyCreator requestBodyCreator) {
-		this.requestBodyCreator = requestBodyCreator;
-	}
 
 	@Inject
 	private EntityTypeRepository entityTypeRepository;
 
-	private Set<Method> methods;
+	private DynamicEntityTypeSubrepository<?> jsonRepository;
 
-	public Set<Method> getMethods() {
-		return methods;
-	}
+	@Inject
+	private MethodFactory methodFactory;
+
+	private Set<Method> methods;
 
 	private String packageSearchPath;
 
-	private void createMeta() {
-		if (StringUtils.isNotEmpty(packageSearchPath)) {
-			try {
-				final PathMatchingResourcePatternResolver patternResolover = new PathMatchingResourcePatternResolver();
+	private RequestBodyCreator requestBodyCreator;
+
+	private TransformationBuilderFactory transformationBuilderFactory;
+
+	private void createMeta()
+	{
+		if (StringUtils.isNotEmpty(packageSearchPath))
+		{
+			try
+			{
+				final PathMatchingResourcePatternResolver patternResolover =
+					new PathMatchingResourcePatternResolver(getClass().getClassLoader());
 				final Resource[] resources = patternResolover.getResources(packageSearchPath);
 
 				methods = new HashSet<Method>();
-				for (final Resource candidateResource : resources) {
+				for (final Resource candidateResource : resources)
+				{
 					List<Method> methodsInClass = processClass(candidateResource);
 					methods.addAll(methodsInClass);
 
 				}
 
-			} catch (final Exception e) {
+			}
+			catch (final Exception e)
+			{
 				throw new TechnicalException("cannot generate description of rest services", e);
 			}
 		}
 	}
 
-	public String getPackageSearchPath() {
+	public List<Method> createMeta(final Class<?> clazz)
+	{
+		List<Method> methods = new LinkedList<Method>();
+
+		for (final java.lang.reflect.Method methodMetadata : clazz.getDeclaredMethods())
+		{
+			if (methodMetadata.isAnnotationPresent(DocIgnore.class))
+			{
+				continue;
+			}
+			if (methodMetadata.isAnnotationPresent(RequestMapping.class))
+			{
+				final Method method = processMethod(methodMetadata);
+				if (method != null)
+				{
+					methods.add(method);
+				}
+
+			}
+		}
+		return methods;
+	}
+
+	public String getBaseUri()
+	{
+		return baseUri;
+	}
+
+	public DynamicEntityTypeSubrepository<?> getJsonRepository()
+	{
+		return jsonRepository;
+	}
+
+	public MethodFactory getMethodFactory()
+	{
+		return methodFactory;
+	}
+
+	public Set<Method> getMethods()
+	{
+		return methods;
+	}
+
+	public String getPackageSearchPath()
+	{
 		return packageSearchPath;
 	}
 
-	public void setPackageSearchPath(String packageSearchPath) {
-		this.packageSearchPath = packageSearchPath;
+	public RequestBodyCreator getRequestBodyCreator()
+	{
+		return requestBodyCreator;
+	}
+
+	@Override
+	public Set<Method> getServices()
+	{
+		return methods;
+	}
+
+	public TransformationBuilderFactory getTransformationBuilderFactory()
+	{
+		return transformationBuilderFactory;
 	}
 
 	@PostConstruct
-	public void initialize() {
+	public void initialize()
+	{
 		createMeta();
 	}
 
 	@SuppressWarnings("unchecked")
-	private List<Method> processClass(Resource candidateResource) throws Exception {
+	private List<Method> processClass(Resource candidateResource) throws Exception
+	{
 		List<Method> methods = new ArrayList<Method>();
 		final FileSystemResource resource = (FileSystemResource) candidateResource;
-		if (resource.getFilename().endsWith(".class")) {
-			final PathMatchingResourcePatternResolver patternResolover = new PathMatchingResourcePatternResolver();
+		if (resource.getFilename().endsWith(".class"))
+		{
+			final PathMatchingResourcePatternResolver patternResolover =
+				new PathMatchingResourcePatternResolver(getClass().getClassLoader());
 			final MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(patternResolover);
 
 			final MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
@@ -148,30 +178,14 @@ public class MethodProvider implements ServiceProvider<Method> {
 		return methods;
 	}
 
-	public List<Method> createMeta(final Class<?> clazz) {
-		List<Method> methods = new LinkedList<Method>();
-
-		for (final java.lang.reflect.Method methodMetadata : clazz.getDeclaredMethods()) {
-			if (methodMetadata.isAnnotationPresent(DocIgnore.class)) {
-				continue;
-			}
-			if (methodMetadata.isAnnotationPresent(RequestMapping.class)) {
-				final Method method = processMethod(methodMetadata);
-				if (method != null) {
-					methods.add(method);
-				}
-
-			}
-		}
-		return methods;
-	}
-
-	private Method processMethod(java.lang.reflect.Method methodMeta) {
+	private Method processMethod(java.lang.reflect.Method methodMeta)
+	{
 		final RequestMapping requestMapping = methodMeta.getAnnotation(RequestMapping.class);
 		final String uri = requestMapping.value()[0];
 		final String methodName = methodMeta.getName();
-		final RequestMethod requestMethod = requestMapping.method() == null || requestMapping.method().length == 0 ? RequestMethod.GET
-				: requestMapping.method()[0];
+		final RequestMethod requestMethod =
+			requestMapping.method() == null || requestMapping.method().length == 0 ? RequestMethod.GET : requestMapping
+				.method()[0];
 		final Method method = new Method();
 		method.setUriPattern(baseUri + uri);
 		method.setVerb(requestMethod.name());
@@ -181,7 +195,8 @@ public class MethodProvider implements ServiceProvider<Method> {
 		method.setReturnType(entityTypeRepository.getType(javaReturntype));
 
 		if (methodMeta.getParameterTypes().length == 1 && methodMeta.getParameterAnnotations()[0].length == 1
-				&& methodMeta.getParameterAnnotations()[0][0].annotationType().equals(RequestBody.class)) {
+			&& methodMeta.getParameterAnnotations()[0][0].annotationType().equals(RequestBody.class))
+		{
 			method.setRequestBody(requestBodyCreator.createParam(methodMeta, methodMeta.getParameterTypes()[0]));
 		}
 
@@ -190,15 +205,17 @@ public class MethodProvider implements ServiceProvider<Method> {
 		return method;
 	}
 
-	private EntityType<?> processParams(java.lang.reflect.Method methodMeta) {
+	private EntityType<?> processParams(java.lang.reflect.Method methodMeta)
+	{
 		org.atemsource.atem.api.method.Method method = methodFactory.create(methodMeta);
-		EntityTypeBuilder builder = jsonRepository
-				.createBuilder("request-param:" + method.getParameterType().getCode());
-		TypeTransformationBuilder<Object[], ?> transformationBuilder = transformationBuilderFactory.create(
-				method.getParameterType(), builder);
-		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes()) {
+		EntityTypeBuilder builder = jsonRepository.createBuilder("request-param:" + method.getParameterType().getCode());
+		TypeTransformationBuilder<Object[], ?> transformationBuilder =
+			transformationBuilderFactory.create(method.getParameterType(), builder);
+		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes())
+		{
 			RequestParam requestParam = ((JavaMetaData) parameter).getAnnotation(RequestParam.class);
-			if (requestParam != null) {
+			if (requestParam != null)
+			{
 				transformationBuilder.transform().from(parameter.getCode()).to(requestParam.value());
 			}
 		}
@@ -206,21 +223,18 @@ public class MethodProvider implements ServiceProvider<Method> {
 		return builder.getReference();
 	}
 
-	@Inject
-	private MethodFactory methodFactory;
-
-	private TransformationBuilderFactory transformationBuilderFactory;
-	private DynamicEntityTypeSubrepository<?> jsonRepository;
-
-	private EntityType<?> processPathVariables(java.lang.reflect.Method methodMeta) {
+	private EntityType<?> processPathVariables(java.lang.reflect.Method methodMeta)
+	{
 		org.atemsource.atem.api.method.Method method = methodFactory.create(methodMeta);
-		EntityTypeBuilder builder = jsonRepository.createBuilder("request-pathvariables:"
-				+ method.getParameterType().getCode());
-		TypeTransformationBuilder<Object[], ?> transformationBuilder = transformationBuilderFactory.create(
-				method.getParameterType(), builder);
-		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes()) {
+		EntityTypeBuilder builder =
+			jsonRepository.createBuilder("request-pathvariables:" + method.getParameterType().getCode());
+		TypeTransformationBuilder<Object[], ?> transformationBuilder =
+			transformationBuilderFactory.create(method.getParameterType(), builder);
+		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes())
+		{
 			PathVariable pathVariable = ((JavaMetaData) parameter).getAnnotation(PathVariable.class);
-			if (pathVariable != null) {
+			if (pathVariable != null)
+			{
 				transformationBuilder.transform().from(parameter.getCode()).to(pathVariable.value());
 			}
 		}
@@ -229,16 +243,43 @@ public class MethodProvider implements ServiceProvider<Method> {
 
 	}
 
-	private void setReturnTypeFromAnnotation(java.lang.reflect.Method methodMeta, final Method method) {
+	public void setBaseUri(String baseUri)
+	{
+		this.baseUri = baseUri;
+	}
+
+	public void setJsonRepository(DynamicEntityTypeSubrepository<?> jsonRepository)
+	{
+		this.jsonRepository = jsonRepository;
+	}
+
+	public void setMethodFactory(MethodFactory methodFactory)
+	{
+		this.methodFactory = methodFactory;
+	}
+
+	public void setPackageSearchPath(String packageSearchPath)
+	{
+		this.packageSearchPath = packageSearchPath;
+	}
+
+	public void setRequestBodyCreator(RequestBodyCreator requestBodyCreator)
+	{
+		this.requestBodyCreator = requestBodyCreator;
+	}
+
+	private void setReturnTypeFromAnnotation(java.lang.reflect.Method methodMeta, final Method method)
+	{
 		ReturnType returnTypeAnnotation = methodMeta.getAnnotation(ReturnType.class);
-		if (returnTypeAnnotation != null) {
+		if (returnTypeAnnotation != null)
+		{
 			EntityType<?> returnType = entityTypeRepository.getEntityType(returnTypeAnnotation.value());
 			method.setReturnType(returnType);
 		}
 	}
 
-	@Override
-	public Set<Method> getServices() {
-		return methods;
+	public void setTransformationBuilderFactory(TransformationBuilderFactory transformationBuilderFactory)
+	{
+		this.transformationBuilderFactory = transformationBuilderFactory;
 	}
 }

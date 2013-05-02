@@ -1,83 +1,166 @@
 package org.atemsource.atem.service.meta.service.provider.resource;
 
-import java.util.Collections;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.atemsource.atem.api.EntityTypeRepository;
+import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.attribute.relation.SingleAttribute;
+import org.atemsource.atem.api.service.DeletionService;
+import org.atemsource.atem.api.service.FindByIdService;
+import org.atemsource.atem.api.service.FindByTypeService;
+import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.TypeFilter;
-import org.atemsource.atem.service.entity.CrudService;
+import org.atemsource.atem.service.entity.EntityRestService;
+import org.atemsource.atem.service.entity.StatefulUpdateService;
 import org.atemsource.atem.service.meta.service.model.resource.Resource;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
+import org.atemsource.atem.utility.binding.Binder;
+import org.atemsource.atem.utility.transform.api.meta.DerivedAttribute;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
+import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class ResourceProvider implements ServiceProvider<Resource>{
+
+public class ResourceProvider implements ServiceProvider<Resource>
+{
+	private Binder collectionBinder;
+
+	@Inject
+	private EntityRestService entityRestService;
+
 	@Inject
 	private EntityTypeRepository entityTypeRepository;
 
+	private final Set<Resource> resources = new HashSet<Resource>();
+
+	private Binder singleBinder;
+
 	private TypeFilter<ObjectNode> typeFilter;
 
-	private Set<Resource> resources = new HashSet<Resource>();
+	private Resource createResource(EntityType<?> viewType, EntityType<?> entityType)
+	{
+		if (entityType.getService(FindByTypeService.class) != null)
+		{
+			EntityTypeTransformation<?, Object> collectionTransformation =
+				collectionBinder.getTransformation(entityType.getJavaType());
 
-	public void initialize() {
-		EntityType<EntityType> metaType = entityTypeRepository.getEntityType(EntityType.class);
-		SingleAttribute<DerivedType> derivedTypeAttribute = (SingleAttribute<DerivedType>) metaType
-				.getMetaAttribute(DerivedType.META_ATTRIBUTE_CODE);
-		for (EntityType<?> entityType : typeFilter.getEntityTypes()) {
-			EntityType<?> originalType = (EntityType<?>) derivedTypeAttribute.getValue(entityType);
-			if (originalType != null) {
-				Resource resource = createResource(entityType, originalType);
-				if (resource != null) {
-					resources.add(resource);
-				}
-			} else {
-				Resource resource = createResource(entityType, entityType);
-				if (resource != null) {
-					resources.add(resource);
+			Resource resource = new Resource();
+			resource.setName(entityType.getCode());
+			resource.setResourceType(collectionTransformation.getEntityTypeB());
+			resource.setUriPath(entityRestService.getCollectionUri(entityType));
+
+			Set<ResourceOperation> operations = new HashSet<ResourceOperation>();
+			IdentityAttributeService identityAttributeService = entityType.getService(IdentityAttributeService.class);
+			if (identityAttributeService != null)
+			{
+				SingleAttribute<? extends Serializable> idAttribute = identityAttributeService.getIdAttribute(entityType);
+				if (idAttribute != null)
+				{
+					EntityTypeTransformation<?, Object> singleTransformation =
+						singleBinder.getTransformation(entityType.getJavaType());
+					resource.setSingleResourceType(singleTransformation.getEntityTypeB());
+					String originalIdCode = idAttribute.getCode();
+					String derivedIdProperty = null;
+					for (Attribute<?, ?> attribute : singleTransformation.getEntityTypeB().getAttributes())
+					{
+						SingleAttribute<DerivedAttribute> derivedAttribute =
+							(SingleAttribute<DerivedAttribute>) attribute
+								.getMetaAttribute(DerivedAttribute.META_ATTRIBUTE_CODE);
+						Attribute<?, ?> originalAttribute = derivedAttribute.getValue(attribute).getOriginalAttribute();
+						if (originalAttribute.getCode().equals(originalIdCode))
+						{
+							derivedIdProperty = attribute.getCode();
+							break;
+						}
+					}
+
+					if (derivedIdProperty == null)
+					{
+						throw new IllegalStateException("cannot fin derived id attribute for " + entityType.getCode());
+					}
+					resource.setIdProperty(derivedIdProperty);
+					if (entityType.getService(FindByIdService.class) != null)
+					{
+						operations.add(ResourceOperation.READ);
+						if (entityType.getService(PersistenceService.class) != null)
+						{
+							operations.add(ResourceOperation.CREATE);
+						}
+						if (entityType.getService(StatefulUpdateService.class) != null)
+						{
+							operations.add(ResourceOperation.UPDATE);
+						}
+						if (entityType.getService(DeletionService.class) != null)
+						{
+							operations.add(ResourceOperation.DELETE);
+						}
+					}
 				}
 			}
-		}
+			resource.setSingleOperations(operations);
 
+			return resource;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
-	public Set<Resource> getServices() {
+	public Binder getCollectionBinder()
+	{
+		return collectionBinder;
+	}
+
+	@Override
+	public Set<Resource> getServices()
+	{
 		return resources;
 	}
 
-	public void setTypeFilter(TypeFilter<ObjectNode> typeFilter) {
+	public Binder getSingleBinder()
+	{
+		return singleBinder;
+	}
+
+	@PostConstruct
+	public void initialize()
+	{
+		EntityType<EntityType> metaType = entityTypeRepository.getEntityType(EntityType.class);
+		SingleAttribute<DerivedType> derivedTypeAttribute =
+			(SingleAttribute<DerivedType>) metaType.getMetaAttribute(DerivedType.META_ATTRIBUTE_CODE);
+		for (EntityType<?> entityType : typeFilter.getEntityTypes())
+		{
+			Resource resource = createResource(entityType, entityType);
+			if (resource != null)
+			{
+				resources.add(resource);
+			}
+
+		}
+
+	}
+
+	public void setCollectionBinder(Binder collectionBinder)
+	{
+		this.collectionBinder = collectionBinder;
+	}
+
+	public void setSingleBinder(Binder singleBinder)
+	{
+		this.singleBinder = singleBinder;
+	}
+
+	public void setTypeFilter(TypeFilter<ObjectNode> typeFilter)
+	{
 		this.typeFilter = typeFilter;
 	}
 
-	private Resource createResource(EntityType<?> viewType, EntityType<?> originalType) {
-		CrudService crudService = originalType.getService(CrudService.class);
-		if (crudService == null) {
-			return null;
-		} else {
-			Resource resource = new Resource();
-			resource.setUriPath(uriPath+"/"+viewType.getCode());
-			resource.setName(originalType.getCode());
-			resource.setResourceType(viewType);
-			Set<ResourceOperation> resourceOperations = new HashSet<ResourceOperation>();
-			resourceOperations.add(ResourceOperation.READ);
-			resource.setSingleOperations(resourceOperations);
-			resource.setCollectionOperations(Collections.EMPTY_SET);
-			return resource;
-		}
-	}
-
-	public String getUriPath() {
-		return uriPath;
-	}
-
-	public void setUriPath(String uriPath) {
-		this.uriPath = uriPath;
-	}
-
-	private String uriPath = "/entities";
 }
