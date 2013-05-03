@@ -8,7 +8,6 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.atemsource.atem.api.EntityTypeRepository;
-import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.attribute.relation.SingleAttribute;
 import org.atemsource.atem.api.service.DeletionService;
 import org.atemsource.atem.api.service.FindByIdService;
@@ -22,7 +21,6 @@ import org.atemsource.atem.service.meta.service.model.resource.Resource;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
 import org.atemsource.atem.utility.binding.Binder;
-import org.atemsource.atem.utility.transform.api.meta.DerivedAttribute;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 import org.codehaus.jackson.node.ObjectNode;
@@ -53,7 +51,7 @@ public class ResourceProvider implements ServiceProvider<Resource>
 
 			Resource resource = new Resource();
 			resource.setName(entityType.getCode());
-			resource.setResourceType(collectionTransformation.getEntityTypeB());
+			resource.setTableStructure(collectionTransformation.getEntityTypeB());
 			resource.setUriPath(entityRestService.getCollectionUri(entityType));
 
 			Set<ResourceOperation> operations = new HashSet<ResourceOperation>();
@@ -63,23 +61,10 @@ public class ResourceProvider implements ServiceProvider<Resource>
 				SingleAttribute<? extends Serializable> idAttribute = identityAttributeService.getIdAttribute(entityType);
 				if (idAttribute != null)
 				{
-					EntityTypeTransformation<?, Object> singleTransformation =
+					EntityTypeTransformation<?, Object> transformation =
 						singleBinder.getTransformation(entityType.getJavaType());
-					resource.setSingleResourceType(singleTransformation.getEntityTypeB());
-					String originalIdCode = idAttribute.getCode();
-					String derivedIdProperty = null;
-					for (Attribute<?, ?> attribute : singleTransformation.getEntityTypeB().getAttributes())
-					{
-						SingleAttribute<DerivedAttribute> derivedAttribute =
-							(SingleAttribute<DerivedAttribute>) attribute
-								.getMetaAttribute(DerivedAttribute.META_ATTRIBUTE_CODE);
-						Attribute<?, ?> originalAttribute = derivedAttribute.getValue(attribute).getOriginalAttribute();
-						if (originalAttribute.getCode().equals(originalIdCode))
-						{
-							derivedIdProperty = attribute.getCode();
-							break;
-						}
-					}
+					String derivedIdProperty = DerivedIdUtils.findDerivedIdProperty(transformation, idAttribute);
+					resource.setResourceType(transformation.getEntityTypeB());
 
 					if (derivedIdProperty == null)
 					{

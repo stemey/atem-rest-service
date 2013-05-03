@@ -18,7 +18,7 @@ import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.service.IdentityService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.impl.meta.DerivedObject;
-import org.atemsource.atem.utility.transform.api.Converter;
+import org.atemsource.atem.service.meta.service.provider.MetaProvider;
 import org.atemsource.atem.utility.transform.api.ConverterFactory;
 import org.atemsource.atem.utility.transform.api.JacksonTransformationContext;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
@@ -43,6 +43,9 @@ public class EntityRestService
 
 	private ConverterFactory idConverterfactory;
 
+	@Inject
+	private MetaProvider metaProvider;
+
 	private EntityType<EntityType> metaType;
 
 	private ObjectMapper objectMapper;
@@ -55,11 +58,8 @@ public class EntityRestService
 	{
 		// TODO we need to use the type of the transformed attribute
 		IdentityService identityService = targetType.getService(IdentityService.class);
-		Converter<String, Serializable> converter =
-			(Converter<String, Serializable>) idConverterfactory.getConverter(String.class,
-				identityService.getIdType(targetType).getJavaType());
-		Serializable convertedId = converter.getAB().convert(idAsString, null);
-		return convertedId;
+		Class<?> javaType = identityService.getIdType(targetType).getJavaType();
+		return (Serializable) PrimitiveConverterUtils.fromString(javaType, idAsString);
 	}
 
 	ObjectNode createErrorNode(ReturnErrorObject returnErrorObject)
@@ -94,7 +94,7 @@ public class EntityRestService
 			}
 			else
 			{
-				Object entity = readEntity(idAsString, type);
+				Object entity = readEntity(idAsString.substring(1), type);
 				if (entity == null)
 				{
 					// 404
@@ -124,7 +124,7 @@ public class EntityRestService
 			String idAsString = matcher.group(2);
 			BufferedReader reader = req.getReader();
 			JsonNode jsonNode = objectMapper.readTree(reader);
-			updateEntity(idAsString, type, jsonNode);
+			updateEntity(idAsString.substring(1), type, jsonNode);
 		}
 		else
 		{
@@ -188,7 +188,9 @@ public class EntityRestService
 		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
 		EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
 		FindByIdService findByIdService = originalType.getService(FindByIdService.class);
+
 		Serializable convertedId = convertId(idAsString, originalType);
+
 		Object json = findByIdService.findById(originalType, convertedId, new SingleCallback<Object>() {
 
 			@Override
@@ -215,7 +217,6 @@ public class EntityRestService
 	protected ObjectNode updateEntity(String idAsString, String type, final Object updatedObject)
 	{
 		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
-		Serializable id = convertId(idAsString, entityType);
 		SimpleValidationContext context = new SimpleValidationContext(entityTypeRepository);
 		ValidationService validationService = entityType.getService(ValidationService.class);
 		if (validationService != null)
@@ -230,6 +231,7 @@ public class EntityRestService
 		}
 		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
 		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
+		Serializable id = convertId(idAsString, originalType);
 		FindByIdService findByIdService = originalType.getService(FindByIdService.class);
 		StatefulUpdateService crudService = originalType.getService(StatefulUpdateService.class);
 

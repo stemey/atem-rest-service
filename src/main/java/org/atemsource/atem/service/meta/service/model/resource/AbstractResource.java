@@ -4,15 +4,12 @@ import java.util.Set;
 
 import org.atemsource.atem.api.attribute.annotation.Association;
 import org.atemsource.atem.api.type.EntityType;
-import org.atemsource.atem.service.meta.service.binding.EditorConversion;
 import org.atemsource.atem.service.meta.service.model.Service;
-import org.atemsource.atem.utility.transform.api.annotation.Conversion;
 
 
 public class AbstractResource extends Service
 {
 
-	@Conversion(EditorConversion.class)
 	private EntityType<?> resourceType;
 
 	@Association(targetType = ResourceOperation.class)

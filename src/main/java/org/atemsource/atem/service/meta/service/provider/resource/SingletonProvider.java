@@ -10,10 +10,10 @@ import javax.inject.Inject;
 
 import org.atemsource.atem.api.EntityTypeRepository;
 import org.atemsource.atem.api.attribute.relation.SingleAttribute;
-import org.atemsource.atem.api.service.FindByIdService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.TypeFilter;
 import org.atemsource.atem.service.entity.EntityRestService;
+import org.atemsource.atem.service.entity.FindByIdService;
 import org.atemsource.atem.service.entity.FindIdsByTypeService;
 import org.atemsource.atem.service.entity.ObservationService;
 import org.atemsource.atem.service.entity.StatefulUpdateService;

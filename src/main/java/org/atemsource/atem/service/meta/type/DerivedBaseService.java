@@ -7,6 +7,7 @@ import org.atemsource.atem.api.service.IdentityService;
 import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.Type;
+import org.atemsource.atem.service.entity.SingleCallback;
 
 
 public class DerivedBaseService extends AbstractDerivedService implements FindByIdService, IdentityService,
@@ -18,7 +19,15 @@ public class DerivedBaseService extends AbstractDerivedService implements FindBy
 	{
 		// TODO transform id
 		Object entity =
-			getOriginalCrudService(entityType, FindByIdService.class).findById(getOriginalType(entityType), id);
+			getOriginalCrudService(entityType, org.atemsource.atem.service.entity.FindByIdService.class).findById(
+				getOriginalType(entityType), id, new SingleCallback<Object>() {
+
+					@Override
+					public Object process(Object entity)
+					{
+						return entity;
+					}
+				});
 		return (E) getTransformation(entityType).getAB().convert(entity, getTransformationContext());
 
 	}

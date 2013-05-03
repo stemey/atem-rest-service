@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.atemsource.atem.api.attribute.annotation.Association;
 import org.atemsource.atem.api.type.EntityType;
-import org.atemsource.atem.service.meta.service.binding.EditorConversion;
 import org.atemsource.atem.utility.transform.api.annotation.Conversion;
 
 
@@ -15,8 +14,8 @@ public class Resource extends AbstractResource
 
 	private String idProperty;
 
-	@Conversion(EditorConversion.class)
-	private EntityType<?> singleResourceType;
+	@Conversion(DojoTableConversion.class)
+	private EntityType<?> tableStructure;
 
 	public Set<CollectionOperation> getCollectionOperations()
 	{
@@ -28,9 +27,9 @@ public class Resource extends AbstractResource
 		return idProperty;
 	}
 
-	public EntityType<?> getSingleResourceType()
+	public EntityType<?> getTableStructure()
 	{
-		return singleResourceType;
+		return tableStructure;
 	}
 
 	public void setCollectionOperations(Set<CollectionOperation> collectionSupportedOperations)
@@ -43,9 +42,9 @@ public class Resource extends AbstractResource
 		this.idProperty = idProperty;
 	}
 
-	public void setSingleResourceType(EntityType<?> singleResourceType)
+	public void setTableStructure(EntityType<?> tableStructure)
 	{
-		this.singleResourceType = singleResourceType;
+		this.tableStructure = tableStructure;
 	}
 
 }
