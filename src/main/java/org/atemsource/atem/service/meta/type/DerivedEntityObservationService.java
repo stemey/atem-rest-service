@@ -19,54 +19,47 @@ import org.atemsource.atem.utility.observer.EntityObserver;
 import org.atemsource.atem.utility.observer.EntityObserverDefinition;
 import org.atemsource.atem.utility.observer.EntityObserverFactory;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
+import org.atemsource.atem.utility.visitor.HierachyVisitor;
 
-
-public class DerivedEntityObservationService implements ObservationService
-{
+public class DerivedEntityObservationService implements ObservationService {
 
 	private ComparisonBuilderFactory comparisonBuilderFactory;
 
 	private EntityObserverFactory entityObserverFactory;
 
-	protected Comparison createComparison(EntityType<?> entityType)
-	{
+	protected Comparison createComparison(EntityType<?> entityType) {
 		ComparisonBuilder comparisonBuilder = comparisonBuilderFactory.create(entityType);
 
-		entityType.visit(new ViewVisitor<ComparisonBuilder>() {
+		HierachyVisitor.visit(entityType, new ViewVisitor<ComparisonBuilder>() {
 
 			@Override
-			public void visit(ComparisonBuilder context, Attribute attribute)
-			{
+			public void visit(ComparisonBuilder context, Attribute attribute) {
 				context.include(attribute);
 			}
 
 			@Override
-			public void visit(ComparisonBuilder context, Attribute attribute, Visitor<ComparisonBuilder> targetTypeVisitor)
-			{
+			public void visit(ComparisonBuilder context, Attribute attribute,
+					Visitor<ComparisonBuilder> targetTypeVisitor) {
 				ComparisonBuilder cascade = context.include(attribute).cascade();
 				targetTypeVisitor.visit(cascade);
 			}
 
 			@Override
-			public boolean visitSubView(ComparisonBuilder context, View view)
-			{
-				return false;
+			public void visitSubView(ComparisonBuilder context, View view, Visitor<ComparisonBuilder> subViewVisitor) {
 			}
 
 			@Override
-			public boolean visitSuperView(ComparisonBuilder context, View view)
-			{
-				return false;
+			public void visitSuperView(ComparisonBuilder context, View view, Visitor<ComparisonBuilder> superViewVisitor) {
 			}
+
 		}, comparisonBuilder);
 		return comparisonBuilder.create();
 	}
 
 	@Override
-	public EntityObserver createObserver(final EntityType<?> entityType, final String id)
-	{
-		EntityType<EntityType> metaType =
-			BeanLocator.getInstance().getInstance(EntityTypeRepository.class).getEntityType(EntityType.class);
+	public EntityObserver createObserver(final EntityType<?> entityType, final String id) {
+		EntityType<EntityType> metaType = BeanLocator.getInstance().getInstance(EntityTypeRepository.class)
+				.getEntityType(EntityType.class);
 		final FindByIdService findByIdService = entityType.getService(FindByIdService.class);
 
 		Comparison comparison = createComparison(entityType);
@@ -75,8 +68,7 @@ public class DerivedEntityObservationService implements ObservationService
 		entityObserver.setHandle(new EntityHandle() {
 
 			@Override
-			public Object getEntity()
-			{
+			public Object getEntity() {
 				Object entity = findByIdService.findById(entityType, id);
 				return entity;
 			}
@@ -84,43 +76,36 @@ public class DerivedEntityObservationService implements ObservationService
 		return entityObserver;
 	}
 
-	public ComparisonBuilderFactory getComparisonBuilderFactory()
-	{
+	public ComparisonBuilderFactory getComparisonBuilderFactory() {
 		return comparisonBuilderFactory;
 	}
 
-	public EntityObserverFactory getEntityObserverFactory()
-	{
+	public EntityObserverFactory getEntityObserverFactory() {
 		return entityObserverFactory;
 	}
 
-	private SingleAttribute<DerivedType> getOriginalTypeAttribut()
-	{
+	private SingleAttribute<DerivedType> getOriginalTypeAttribut() {
 		return (SingleAttribute<DerivedType>) BeanLocator.getInstance().getInstance(EntityTypeRepository.class)
-			.getEntityType(EntityType.class).getMetaAttribute(DerivedObject.META_ATTRIBUTE_CODE);
+				.getEntityType(EntityType.class).getMetaAttribute(DerivedObject.META_ATTRIBUTE_CODE);
 	}
 
 	@Override
-	public String getScope(EntityType<?> type, String id)
-	{
+	public String getScope(EntityType<?> type, String id) {
 		EntityType<?> originalType = getOriginalTypeAttribut().getValue(type).getOriginalType();
 		ObservationService observationService = originalType.getService(ObservationService.class);
 		return observationService.getScope(originalType, id);
 	}
 
 	@Override
-	public boolean isObservable(EntityType<?> type, String id)
-	{
+	public boolean isObservable(EntityType<?> type, String id) {
 		return true;
 	}
 
-	public void setComparisonBuilderFactory(ComparisonBuilderFactory comparisonBuilderFactory)
-	{
+	public void setComparisonBuilderFactory(ComparisonBuilderFactory comparisonBuilderFactory) {
 		this.comparisonBuilderFactory = comparisonBuilderFactory;
 	}
 
-	public void setEntityObserverFactory(EntityObserverFactory entityObserverFactory)
-	{
+	public void setEntityObserverFactory(EntityObserverFactory entityObserverFactory) {
 		this.entityObserverFactory = entityObserverFactory;
 	}
 }

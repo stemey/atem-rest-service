@@ -21,6 +21,7 @@ import org.atemsource.atem.utility.observer.EntityHandle;
 import org.atemsource.atem.utility.observer.EntityObserver;
 import org.atemsource.atem.utility.observer.EntityObserverDefinition;
 import org.atemsource.atem.utility.observer.EntityObserverFactory;
+import org.atemsource.atem.utility.visitor.HierachyVisitor;
 
 public class SpringBeanObservationDefinition implements ObservationDefinition {
 
@@ -35,7 +36,6 @@ public class SpringBeanObservationDefinition implements ObservationDefinition {
 	@Inject
 	private EntityTypeRepository entityTypeRepository;
 
-
 	public String getBeanId() {
 		return beanId;
 	}
@@ -44,7 +44,6 @@ public class SpringBeanObservationDefinition implements ObservationDefinition {
 		this.beanId = beanId;
 	}
 
-	
 	@Override
 	public EntityObserver createObserver() {
 
@@ -72,13 +71,13 @@ public class SpringBeanObservationDefinition implements ObservationDefinition {
 
 	@Override
 	public String getName() {
-		return "spring:"+beanId;
+		return "spring:" + beanId;
 	}
 
 	protected Comparison createComparison(EntityType<?> entityType) {
 		ComparisonBuilder comparisonBuilder = comparisonBuilderFactory.create(entityType);
 
-		entityType.visit(new ViewVisitor<ComparisonBuilder>() {
+		HierachyVisitor.visit(entityType, new ViewVisitor<ComparisonBuilder>() {
 
 			public void visit(ComparisonBuilder context, Attribute attribute) {
 				context.include(attribute);
@@ -92,13 +91,14 @@ public class SpringBeanObservationDefinition implements ObservationDefinition {
 				}
 			}
 
-			public boolean visitSubView(ComparisonBuilder context, View view) {
-				return false;
+			@Override
+			public void visitSubView(ComparisonBuilder context, View view, Visitor<ComparisonBuilder> subViewVisitor) {
 			}
 
-			public boolean visitSuperView(ComparisonBuilder context, View view) {
-				return false;
+			@Override
+			public void visitSuperView(ComparisonBuilder context, View view, Visitor<ComparisonBuilder> superViewVisitor) {
 			}
+
 		}, comparisonBuilder);
 		return comparisonBuilder.create();
 	}
