@@ -7,7 +7,12 @@
  ******************************************************************************/
 package org.atemsource.atem.service.entity;
 
+import java.util.Collection;
+
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.service.entity.search.Paging;
+import org.atemsource.atem.service.entity.search.Query;
+import org.atemsource.atem.service.entity.search.Sorting;
 
 
 // TODO: Auto-generated Javadoc
@@ -23,5 +28,7 @@ public interface FindByTypeService
 	 * @param sorting the sorting
 	 * @return the entities
 	 */
-	public <E> Object getEntities(EntityType<E> entityType, ListCallback<E> listCallback);
+	public <E> Object getEntities(EntityType<E> entityType, Query query, Sorting sorting, Paging paging,ListCallback<E> listCallback);
+	
+	public <E> Collection<String> getQueryableFields(EntityType<E> entityType);
 }

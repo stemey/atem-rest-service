@@ -69,7 +69,7 @@ public class EditorTransformationFactory {
 		attributeTransformationFactory.init(schemaTransformation);
 
 		transformTypeCode(schemaTransformationBuilder);
-		schemaTransformationBuilder.transformCustom(Constant.class).to("type-property").value(String.class, "ext_type");
+		//schemaTransformationBuilder.transformCustom(Constant.class).to("type-property").value(String.class, "ext_type");
 		schemaTransformationBuilder.transformCollection().from("attributes").to("attributes")
 				.convert(attributeTransformationFactory.getAttributeTransformation());
 
@@ -81,8 +81,9 @@ public class EditorTransformationFactory {
 		if (schemaTransformationBuilder.getSourceType().getMetaAttribute(Binding.META_ATTRIBUTE_CODE) != null) {
 			schemaTransformationBuilder.transform().from("code").to("code");
 			// if binding exists then 'code' will be overwritten.
-			schemaTransformationBuilder.transform().from("@" + Binding.META_ATTRIBUTE_CODE + ".externalTypeCode")
-					.to("code");
+			// TODO does not work currently???!!!
+//			schemaTransformationBuilder.transform().from("@" + Binding.META_ATTRIBUTE_CODE + ".externalTypeCode")
+//					.to("code");
 		} else {
 			schemaTransformationBuilder.transform().from("code").to("code");
 		}

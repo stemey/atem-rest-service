@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface ListCallback<E>
 {
-	Object process(List<E> entities);
+	Object process(List<E> entities, long totalCount);
 }

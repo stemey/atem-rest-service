@@ -53,6 +53,10 @@ public abstract class AbstractAttributeTransformationFactory {
 	private Set<AttributeTransformationCreator> attributeCreators;
 	private List<AttributeMixin> attributeMixins;
 
+	private EntityTypeTransformation complexSingleTransformation;
+
+	private EntityTypeTransformation complexArrayTransformation;
+
 	public AbstractAttributeTransformationFactory() {
 		super();
 	}
@@ -66,19 +70,6 @@ public abstract class AbstractAttributeTransformationFactory {
 	
 		TypeTransformationBuilder<Attribute, ?> transformationBuilder = createAttributeTransformation();
 		attributeTransformation = transformationBuilder.getReference();
-		final EntityTypeTransformation complexSingleTransformation = createComplexTransformation(
-				complexTypeTransformation, false);
-		final EntityTypeTransformation complexArrayTransformation = createComplexTransformation(
-				complexTypeTransformation, true);
-		if (attributeMixins != null) {
-			for (AttributeMixin mixin : attributeMixins) {
-				mixin.mixin(transformationBuilder);
-			}
-		}
-		
-		
-		createPrimitiveAttributes(true);
-		createPrimitiveAttributes(false);
 		
 		
 		attributeTransformation.setFinder(new TransformationFinder<Attribute, ObjectNode>() {
@@ -116,7 +107,24 @@ public abstract class AbstractAttributeTransformationFactory {
 				return null;
 			}
 		});
+		
+		if (attributeMixins != null) {
+			for (AttributeMixin mixin : attributeMixins) {
+				mixin.mixin(transformationBuilder);
+			}
+		}
+
 		transformationBuilder.buildTypeTransformation();
+		
+		complexSingleTransformation = createComplexTransformation(
+				complexTypeTransformation, false);
+		complexArrayTransformation = createComplexTransformation(
+				complexTypeTransformation, true);
+		
+		
+		createPrimitiveAttributes(true);
+		createPrimitiveAttributes(false);
+
 	
 	}
 

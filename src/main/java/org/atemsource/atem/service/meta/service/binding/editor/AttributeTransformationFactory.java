@@ -25,7 +25,7 @@ public class AttributeTransformationFactory extends AbstractAttributeTransformat
 	protected void transformComplexAttribute(EntityTypeTransformation complexTypeTransformation,
 			TypeTransformationBuilder<Attribute, ?> transformationBuilder) {
 		transformValidTypes(transformationBuilder, complexTypeTransformation, complexTypeTransformation.getEntityTypeB());
-		transformationBuilder.transform().from("targetType.code").to("type");
+		//transformationBuilder.transform().from("targetType.code").to("code");
 	}
 	
 	
@@ -48,6 +48,7 @@ public class AttributeTransformationFactory extends AbstractAttributeTransformat
 							ValidTypes validTypes = ((JavaMetaData) a).getAnnotation(ValidTypes.class);
 
 							ArrayNode validTypesArray = b.arrayNode();
+							b.put("type_property","ext_type");
 							if (validTypes != null && validTypes.value().length == 0) {
 								b.putNull("validTypes");
 							} else if (validTypes != null && validTypes.value().length > 0) {
