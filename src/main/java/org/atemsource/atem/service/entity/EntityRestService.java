@@ -73,8 +73,13 @@ public class EntityRestService {
 
 	private Serializable convertId(String idAsString, EntityType<?> targetType) {
 		// TODO we need to use the type of the transformed attribute
-		IdentityService identityService = targetType.getService(IdentityService.class);
-		Class<?> javaType = identityService.getIdType(targetType).getJavaType();
+		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(targetType);
+		EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
+		IdentityService identityService = originalType.getService(IdentityService.class);
+		if (identityService==null) {
+			throw new TechnicalException("no identityService for "+targetType.getCode());
+		}
+		Class<?> javaType = identityService.getIdType(originalType).getJavaType();
 		return (Serializable) PrimitiveConverterUtils.fromString(javaType, idAsString);
 	}
 
@@ -95,6 +100,7 @@ public class EntityRestService {
 		private ArrayNode entities;
 		private long totalCount;
 	}
+	
 
 	private String sortParam = "sortBy";
 
@@ -148,6 +154,7 @@ public class EntityRestService {
 				handle500Error(resp, e);
 			}
 		} catch (Exception e) {
+			logger.error("cannot find resource",e);
 			resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 		}
 
@@ -345,7 +352,7 @@ public class EntityRestService {
 		}
 		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
 		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
-		Serializable id = convertId(idAsString, originalType);
+		Serializable id = convertId(idAsString, entityType);
 		FindByIdService findByIdService = originalType.getService(FindByIdService.class);
 		StatefulUpdateService crudService = originalType.getService(StatefulUpdateService.class);
 
@@ -450,7 +457,7 @@ public class EntityRestService {
 	}
 
 	protected void handle500Error(HttpServletResponse resp, Exception e) throws IOException {
-		logger.error(e);
+		logger.error("error when serving request",e);
 		resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		e.printStackTrace(resp.getWriter());
 		resp.flushBuffer();
@@ -469,5 +476,9 @@ public class EntityRestService {
 
 	public String getUriById(EntityType<?> entityType, Serializable id) {
 		return getUri(entityType, String.valueOf(id));
+	}
+
+	public EntityType<?> getEntityTypeForUri(String url) {
+		return parse(url).getEntityType();
 	}
 }
