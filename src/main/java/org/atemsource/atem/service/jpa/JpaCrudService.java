@@ -103,7 +103,6 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 			}
 			throw new TechnicalException("cannot commit transaction ", e);
 		}
-
 	}
 
 	protected <E> TypedQuery<E> createListQuery(EntityType<E> originalType, Query query, Sorting sorting, Paging paging) {
@@ -149,10 +148,6 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		return orderList;
 	}
 
-	public EntityManager getEntityManager() {
-		return entityManager;
-	}
-
 	public <E> Serializable getId(EntityType<E> entityType, E entity) {
 		return getIdAttribute(entityType).getValue(entity);
 	}
@@ -169,10 +164,6 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 
 	public Type<?> getIdType(EntityType<?> entityType) {
 		return getIdAttribute(entityType).getTargetType();
-	}
-
-	public JpaTransactionManager getJpaTransactionManager() {
-		return jpaTransactionManager;
 	}
 
 	public <E> Serializable insert(EntityType<E> originalType, E entity) {

@@ -15,7 +15,6 @@ import org.atemsource.atem.service.entity.search.Query;
 import org.atemsource.atem.service.entity.search.Sorting;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * The Interface FindByTypeService.
  */
@@ -23,12 +22,20 @@ public interface FindByTypeService
 {
 
 	/**
-	 * Gets the entities.
-	 * 
-	 * @param sorting the sorting
-	 * @return the entities
+	 *  get entities
+	 * @param entityType
+	 * @param query
+	 * @param sorting
+	 * @param paging
+	 * @param listCallback
+	 * @return
 	 */
 	public <E> Object getEntities(EntityType<E> entityType, Query query, Sorting sorting, Paging paging,ListCallback<E> listCallback);
 	
+	/**
+	 * get the queryable fields
+	 * @param entityType
+	 * @return
+	 */
 	public <E> Collection<String> getQueryableFields(EntityType<E> entityType);
 }

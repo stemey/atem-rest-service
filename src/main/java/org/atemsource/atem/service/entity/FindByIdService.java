@@ -12,7 +12,6 @@ import java.io.Serializable;
 import org.atemsource.atem.api.type.EntityType;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * The Interface FindByIdService.
  */
@@ -20,7 +19,7 @@ public interface FindByIdService
 {
 
 	/**
-	 * Find by typed id.
+	 * Find entity typed id.
 	 * 
 	 * @param entityType the entity type
 	 * @param id the id
