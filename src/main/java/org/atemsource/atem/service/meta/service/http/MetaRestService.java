@@ -8,9 +8,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.atemsource.atem.api.EntityTypeRepository;
 import org.atemsource.atem.api.infrastructure.exception.TechnicalException;
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.service.meta.service.binding.editor.EditorTransformationFactory;
 import org.atemsource.atem.service.meta.service.model.Meta;
 import org.atemsource.atem.service.meta.service.provider.MetaProvider;
 import org.atemsource.atem.utility.binding.Binder;
@@ -54,11 +56,35 @@ public class MetaRestService {
 	}
 
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		String typeCode = req.getRequestURI().substring("/meta/".length());
+		if (StringUtils.isNotEmpty(typeCode)) {
+			EditorTransformationFactory editorTransformationFactory = org.atemsource.atem.api.BeanLocator.getInstance().getInstance(EditorTransformationFactory.class);
+			EntityTypeTransformation<EntityType , ?>editorTransformation = editorTransformationFactory.getTransformation();
+			EntityType<Object> entityType = entityTypeRepository.getEntityType(typeCode);
+			Object schema=editorTransformation.getAB().convert(entityType, new SimpleTransformationContext(entityTypeRepository));
+			resp.setCharacterEncoding("UTF-8");
+			resp.setContentType("application/json");
+			objectMapper.writeValue(resp.getWriter(), schema);
+		}else {
 		resp.setCharacterEncoding("UTF-8");
 		resp.setContentType("application/json");
 		ObjectNode json = createJson();
 		json.put("sessionId",req.getSession(true).getId());
 		objectMapper.writeValue(resp.getWriter(), json);
+		}
+	}
+	
+	public void doGetSingleSchema(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		resp.setCharacterEncoding("UTF-8");
+		resp.setContentType("application/json");
+		ObjectNode json = createJson();
+		json.put("sessionId",req.getSession(true).getId());
+		objectMapper.writeValue(resp.getWriter(), json);
+	}
+
+	
+	public String getSchemaUri(EntityType type) {
+		return "/meta/"+type.getCode();
 	}
 
 	protected ObjectNode createJson() {

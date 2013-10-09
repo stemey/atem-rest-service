@@ -246,7 +246,9 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		case LET:
 			return criteriaBuilder.lessThanOrEqualTo(path, value);
 		case LIKE:
-			return criteriaBuilder.like((Expression<String>) path, (String) attributePredicate.getValue(), '*');
+			// for grid: we need to add  % 
+			String param = ((String)attributePredicate.getValue())+"%";
+			return criteriaBuilder.like((Expression<String>) path, param);
 		default:
 			throw new IllegalStateException("operator not implmeneted " + attributePredicate.getOperator());
 		}
