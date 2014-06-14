@@ -28,7 +28,7 @@ public class FloatMixin implements AttributeTransformationCreator {
 
 	@Override
 	public boolean canTransform(Attribute<?,?> attribute) {
-		return attribute.getTargetType().getJavaType()==Float.class;
+		return attribute.getTargetType() instanceof FloatType;
 	}
 
 	

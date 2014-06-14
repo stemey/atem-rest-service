@@ -15,8 +15,8 @@ public class PatternMixin implements AttributeMixin {
 
 	@Override
 	public void mixin(TypeTransformationBuilder<?, ?> builder) {
-		builder.transform().from(ClassUtils.getAttributeName(javax.validation.constraints.Pattern.class)+".regexp").to("pattern");
-		builder.transform().from(ClassUtils.getAttributeName(javax.validation.constraints.Pattern.class)+".message").to("invalidMessage");
+		builder.transform().from(ClassUtils.getMetaAttributePath(javax.validation.constraints.Pattern.class)+".regexp").to("pattern");
+		builder.transform().from(ClassUtils.getMetaAttributePath(javax.validation.constraints.Pattern.class)+".message").to("invalidMessage");
 	}
 
 	

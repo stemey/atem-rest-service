@@ -8,24 +8,37 @@ import org.atemsource.atem.api.type.primitive.IntegerType;
 import org.atemsource.atem.service.meta.service.binding.AttributeMixin;
 import org.atemsource.atem.service.meta.service.binding.ClassUtils;
 import org.atemsource.atem.service.meta.service.binding.attributetype.AttributeTransformationCreator;
+import org.atemsource.atem.utility.transform.api.JavaTransformation;
 import org.atemsource.atem.utility.transform.api.JavaUniConverter;
 import org.atemsource.atem.utility.transform.api.TransformationContext;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 import org.atemsource.atem.utility.transform.impl.builder.Constant;
+import org.atemsource.atem.utility.transform.impl.builder.GenericTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.builder.Mixin;
+import org.codehaus.jackson.node.ObjectNode;
 
 public class RequiredMixin implements AttributeMixin {
 
 	@Override
 	public void mixin(TypeTransformationBuilder<?, ?> builder) {
-		builder.transform().from(ClassUtils.getAttributeName(javax.validation.constraints.NotNull.class)).to("required").convert(new JavaUniConverter<NotNull,Boolean>() {
+		builder.transformCustom(GenericTransformationBuilder.class).transform(new JavaTransformation<Attribute,ObjectNode>() {
 
 			@Override
-			public Boolean convert(NotNull a, TransformationContext ctx) {
-				return a!=null;
+			public void mergeAB(Attribute a, ObjectNode b, TransformationContext ctx) {
+				Attribute metaAttribute = a.getMetaAttribute(ClassUtils.getMetaAttributeName(javax.validation.constraints.NotNull.class));
+				b.put("required", (metaAttribute!=null && metaAttribute.getValue(a)!=null) || a.isRequired());
 			}
-		});
+
+			@Override
+			public void mergeBA(ObjectNode b, Attribute a, TransformationContext ctx) {
+				
+			}
+		}).to().addSingleAttribute("required", boolean.class);
+		
+		
+		
+		
 	}
 
 	

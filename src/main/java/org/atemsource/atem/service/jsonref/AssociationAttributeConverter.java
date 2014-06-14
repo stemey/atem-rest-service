@@ -30,6 +30,9 @@ public class AssociationAttributeConverter implements AttributeConverter {
 			if (annotation != null && !annotation.composition()) {
 				EntityType<Object> typeB = (EntityType<Object>) transformation.getTypeB();
 				return new JsonRefConverter(entityRestService, metaRestService, objectMapper, typeB);
+			}else if (!attribute.isComposition()) {
+				EntityType<Object> typeB = (EntityType<Object>) transformation.getTypeB();
+				return new JsonRefConverter(entityRestService, metaRestService, objectMapper, typeB);
 			}
 		}
 		}

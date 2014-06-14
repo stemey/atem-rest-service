@@ -4,6 +4,7 @@ import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
 import org.atemsource.atem.api.type.Type;
 import org.atemsource.atem.api.type.primitive.BooleanType;
+import org.atemsource.atem.api.type.primitive.DoubleType;
 import org.atemsource.atem.api.type.primitive.IntegerType;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
@@ -24,7 +25,7 @@ public class BooleanMixin implements AttributeTransformationCreator {
 
 	@Override
 	public boolean canTransform(Attribute<?,?> attribute) {
-		return attribute.getTargetType().getJavaType()==Boolean.class;
+		return attribute.getTargetType() instanceof BooleanType;
 	}
 
 

@@ -1,6 +1,7 @@
 package org.atemsource.atem.service.meta.service.binding.attributetype;
 
 import org.atemsource.atem.api.attribute.Attribute;
+import org.atemsource.atem.api.type.primitive.DoubleType;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 import org.atemsource.atem.utility.transform.impl.builder.Constant;
@@ -18,7 +19,7 @@ public class DoubleMixin implements AttributeTransformationCreator {
 
 	@Override
 	public boolean canTransform(Attribute<?,?> attribute) {
-		return attribute.getTargetType().getJavaType()==Double.class;
+		return attribute.getTargetType() instanceof DoubleType;
 	}
 
 	@Override

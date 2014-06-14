@@ -39,6 +39,7 @@ public class IdAttributeMixin implements AttributeMixin {
 							.getIdAttribute(((Attribute) a).getEntityType());
 					if (a == idAttribute) {
 						ctx.getEntityTypeByB(b).getAttribute("disabled").setValue(b, true);
+						ctx.getEntityTypeByB(b).getAttribute("required").setValue(b, false);
 					}
 				}
 			}

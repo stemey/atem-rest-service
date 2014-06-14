@@ -19,7 +19,7 @@ public class MinMixin implements AttributeMixin {
 
 	@Override
 	public void mixin(TypeTransformationBuilder<?, ?> builder) {
-		builder.transform().from(ClassUtils.getAttributeName(javax.validation.constraints.Min.class)+".value").to("min");
+		builder.transform().from(ClassUtils.getMetaAttributePath(javax.validation.constraints.Min.class)+".value").to("min");
 	}
 
 	

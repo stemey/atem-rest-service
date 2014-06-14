@@ -9,7 +9,7 @@ public class RequestParamMixin implements AttributeMixin {
 
 	@Override
 	public void mixin(TypeTransformationBuilder<?, ?> builder) {
-		builder.transform().from(ClassUtils.getAttributeName(RequestParam.class)+".required").to("required"); 
+		builder.transform().from(ClassUtils.getMetaAttributePath(RequestParam.class)+".required").to("required"); 
 	}
 
 	

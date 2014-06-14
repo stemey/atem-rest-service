@@ -3,6 +3,7 @@ package org.atemsource.atem.service.meta.service.binding.attributetype;
 import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
 import org.atemsource.atem.api.type.primitive.IntegerType;
+import org.atemsource.atem.api.type.primitive.NumberType;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 import org.atemsource.atem.utility.transform.impl.builder.Constant;
@@ -19,7 +20,7 @@ public class IntegerMixin implements AttributeTransformationCreator {
 	
 	@Override
 	public boolean canTransform(Attribute<?,?> attribute) {
-		return attribute.getTargetType().getJavaType()==Integer.class;
+		return attribute.getTargetType() instanceof IntegerType;
 	}
 
 	protected void extend(TypeTransformationBuilder<Attribute, ?> transformationBuilder) {

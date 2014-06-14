@@ -19,7 +19,7 @@ public class SizeMixin implements AttributeMixin {
 
 	@Override
 	public void mixin(TypeTransformationBuilder<?, ?> builder) {
-		builder.transform().from(ClassUtils.getAttributeName(javax.validation.constraints.Size.class)+".max").to("maxLength");
+		builder.transform().from(ClassUtils.getMetaAttributePath(javax.validation.constraints.Size.class)+".max").to("maxLength");
 	}
 
 	

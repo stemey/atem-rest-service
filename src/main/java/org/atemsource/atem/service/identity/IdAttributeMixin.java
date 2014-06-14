@@ -38,6 +38,7 @@ public class IdAttributeMixin implements AttributeMixin {
 								if (a == jsonIdAttributePath.getAttribute()) {
 									EntityType<Object> entityTypeByB = ctx.getEntityTypeByB(b);
 									entityTypeByB.getAttribute("disabled").setValue(b, true);
+									entityTypeByB.getAttribute("required").setValue(b, false);
 								}
 							}
 						}
