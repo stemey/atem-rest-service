@@ -22,6 +22,34 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class JsonRefConverter extends AbstractLocalConverter<Object,ObjectNode> {
 
+	@Override
+	public Type<Object> getTypeA() {
+		// TODO Auto-generated method stub
+		return super.getTypeA();
+	}
+
+
+
+	@Override
+	public Type<ObjectNode> getTypeB() {
+		// TODO Auto-generated method stub
+		return super.getTypeB();
+	}
+
+	@Override
+	public void setTypeA(Type<Object> typeA) {
+		// TODO Auto-generated method stub
+		super.setTypeA(typeA);
+	}
+
+
+
+	@Override
+	public void setTypeB(Type<ObjectNode> typeB) {
+		// TODO Auto-generated method stub
+		super.setTypeB(typeB);
+	}
+
 	private EntityRestService entityRestService;
 	private MetaRestService metaRestService;
 	private ObjectMapper objectMapper;

@@ -19,9 +19,11 @@ import org.atemsource.atem.utility.transform.impl.builder.TransformationTargetTy
 public class IdAttributeMixin implements AttributeMixin {
 
 	public void mixin(TypeTransformationBuilder<?, ?> builder) {
+		@SuppressWarnings("unchecked")
 		TransformationTargetTypeBuilder targetTypeBuilder = builder.transformCustom(GenericTransformationBuilder.class)
 				.transform(new JavaTransformation<Object, Object>() {
 
+					@SuppressWarnings("rawtypes")
 					public void mergeAB(Object a, Object b, TransformationContext ctx) {
 						EntityType jsonType = ((Attribute<?, ?>) a).getEntityType();
 						DerivedType derivedType = (DerivedType) jsonType.getMetaType()

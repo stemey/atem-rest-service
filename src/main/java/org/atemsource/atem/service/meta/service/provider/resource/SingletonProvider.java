@@ -17,6 +17,7 @@ import org.atemsource.atem.service.entity.FindByIdService;
 import org.atemsource.atem.service.entity.FindIdsByTypeService;
 import org.atemsource.atem.service.entity.ObservationService;
 import org.atemsource.atem.service.entity.StatefulUpdateService;
+import org.atemsource.atem.service.gform.GformContext;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
 import org.atemsource.atem.service.meta.service.model.resource.Singleton;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
@@ -37,6 +38,8 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 	private ObserverPublisher observerPublisher;
 
 	private final Set<Singleton> resources = new HashSet<Singleton>();
+	
+	private GformContext gformContext;
 
 	private TypeFilter<ObjectNode> typeFilter;
 
@@ -62,7 +65,7 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 					observerPublisher.getChannelPattern(observationService.getScope(viewType, id), viewType.getCode(), id);
 				singleton.setTopic(channelPattern);
 			}
-			singleton.setResourceType(viewType);
+			singleton.setResourceType(gformContext.create(viewType));
 			Set<ResourceOperation> resourceOperations = new HashSet<ResourceOperation>();
 			if (originalType.getService(StatefulUpdateService.class) != null)
 			{
@@ -71,6 +74,10 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 			singleton.setType("singleton");
 			return singleton;
 		}
+	}
+
+	public void setGformContext(GformContext gformContext) {
+		this.gformContext = gformContext;
 	}
 
 	@Override

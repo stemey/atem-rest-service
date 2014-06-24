@@ -18,6 +18,8 @@ import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.TypeFilter;
 import org.atemsource.atem.service.entity.EntityRestService;
 import org.atemsource.atem.service.entity.StatefulUpdateService;
+import org.atemsource.atem.service.gform.GformContext;
+import org.atemsource.atem.service.gform.GroupCreator;
 import org.atemsource.atem.service.meta.service.model.resource.Resource;
 import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
@@ -54,6 +56,8 @@ public class ResourceProvider implements ServiceProvider<Resource>
 
 	@Inject
 	private EntityRestService entityRestService;
+	
+	private GformContext gformContext;
 
 	@Inject
 	private EntityTypeRepository entityTypeRepository;
@@ -82,13 +86,14 @@ public class ResourceProvider implements ServiceProvider<Resource>
 			if (identityAttributeService != null)
 			{
 				SingleAttribute<? extends Serializable> idAttribute = identityAttributeService.getIdAttribute(entityType);
+				EntityTypeTransformation<?, Object> transformation =
+						singleTransformationFactory.getTransformation(entityType);
+				ObjectNode gform = gformContext.create(transformation.getEntityTypeB());
+				resource.setResourceType(gform);
+				resource.setUriPath(entityRestService.getCollectionUri(transformation.getEntityTypeB())+"/");
 				if (idAttribute != null)
 				{
-					EntityTypeTransformation<?, Object> transformation =
-						singleTransformationFactory.getTransformation(entityType);
 					String derivedIdProperty = DerivedIdUtils.findDerivedIdProperty(transformation, idAttribute);
-					resource.setResourceType(transformation.getEntityTypeB());
-					resource.setUriPath(entityRestService.getCollectionUri(transformation.getEntityTypeB())+"/");
 
 					if (derivedIdProperty == null)
 					{
@@ -121,6 +126,16 @@ public class ResourceProvider implements ServiceProvider<Resource>
 		{
 			return null;
 		}
+	}
+
+
+	public GformContext getGformContext() {
+		return gformContext;
+	}
+
+
+	public void setGformContext(GformContext gformContext) {
+		this.gformContext = gformContext;
 	}
 
 

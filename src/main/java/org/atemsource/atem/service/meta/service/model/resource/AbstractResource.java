@@ -3,17 +3,15 @@ package org.atemsource.atem.service.meta.service.model.resource;
 import java.util.Set;
 
 import org.atemsource.atem.api.attribute.annotation.Association;
-import org.atemsource.atem.api.type.EntityType;
-import org.atemsource.atem.service.meta.service.binding.EditorConversion;
 import org.atemsource.atem.service.meta.service.model.Service;
+import org.atemsource.atem.utility.binding.jackson.NodeConversion;
 import org.atemsource.atem.utility.transform.api.annotation.Conversion;
+import org.codehaus.jackson.node.ObjectNode;
 
+public class AbstractResource extends Service {
 
-public class AbstractResource extends Service
-{
-
-	@Conversion(EditorConversion.class)
-	private EntityType<?> resourceType;
+	@Conversion(NodeConversion.class)
+	private ObjectNode resourceType;
 
 	@Association(targetType = ResourceOperation.class)
 	private Set<ResourceOperation> singleOperations;
@@ -22,53 +20,44 @@ public class AbstractResource extends Service
 
 	private String uriPath;
 
-	public AbstractResource()
-	{
+	public AbstractResource() {
 		super();
 	}
 
-	public EntityType<?> getResourceType()
-	{
+	public ObjectNode getResourceType() {
 		return resourceType;
 	}
 
-	public Set<ResourceOperation> getSingleOperations()
-	{
+	public Set<ResourceOperation> getSingleOperations() {
 		return singleOperations;
 	}
 
-	public String getTopic()
-	{
+	public String getTopic() {
 		return topic;
 	}
 
-	public String getUriPath()
-	{
+	public String getUriPath() {
 		return uriPath;
 	}
 
-	public boolean isRequest(String requestUrl)
-	{
+	public boolean isRequest(String requestUrl) {
 		return requestUrl.startsWith(uriPath);
 	}
 
-	public void setResourceType(EntityType<?> resourceType)
-	{
+	public void setResourceType(ObjectNode resourceType) {
 		this.resourceType = resourceType;
 	}
 
-	public void setSingleOperations(Set<ResourceOperation> singleResourceOperations)
-	{
+	public void setSingleOperations(
+			Set<ResourceOperation> singleResourceOperations) {
 		this.singleOperations = singleResourceOperations;
 	}
 
-	public void setTopic(String topic)
-	{
+	public void setTopic(String topic) {
 		this.topic = topic;
 	}
 
-	public void setUriPath(String uriPath)
-	{
+	public void setUriPath(String uriPath) {
 		this.uriPath = uriPath;
 	}
 
