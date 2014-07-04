@@ -8,21 +8,22 @@
 package org.atemsource.atem.service.entity;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.service.entity.EntityRestService.Result;
 import org.atemsource.atem.service.entity.search.Paging;
 import org.atemsource.atem.service.entity.search.Query;
 import org.atemsource.atem.service.entity.search.Sorting;
 
-
 /**
  * The Interface FindByTypeService.
  */
-public interface FindByTypeService
-{
+public interface FindByTypeService {
 
 	/**
-	 *  get entities
+	 * get entities
+	 * 
 	 * @param entityType
 	 * @param query
 	 * @param sorting
@@ -30,10 +31,12 @@ public interface FindByTypeService
 	 * @param listCallback
 	 * @return
 	 */
-	public <E> Object getEntities(EntityType<E> entityType, Query query, Sorting sorting, Paging paging,ListCallback<E> listCallback);
-	
+	public <O> Result getEntities(EntityType<O> entityType, Query query,
+			Sorting sorting, Paging paging, ListCallback<O> listCallback);
+
 	/**
 	 * get the queryable fields
+	 * 
 	 * @param entityType
 	 * @return
 	 */

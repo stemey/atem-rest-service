@@ -31,9 +31,9 @@ public class SpringBeanCrudService implements FindIdsByTypeService, StatefulUpda
 	private final Type<?> idType = new SimpleTextType();
 
 	@Override
-	public <E> Object findById(EntityType<E> entityType, Serializable id, SingleCallback<E> callback)
+	public <O,T> T findById(EntityType<O> entityType, Serializable id, SingleCallback<O,T> callback)
 	{
-		return callback.process((E) beanLocator.getInstance((String) id));
+		return callback.process((O) beanLocator.getInstance((String) id));
 	}
 
 	@Override

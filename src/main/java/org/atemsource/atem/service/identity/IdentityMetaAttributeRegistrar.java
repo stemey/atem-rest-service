@@ -1,7 +1,5 @@
 package org.atemsource.atem.service.identity;
 
-import org.atemsource.atem.utility.transform.api.meta.Binding;
-
 import org.atemsource.atem.api.extension.EntityTypeRepositoryPostProcessor;
 import org.atemsource.atem.api.extension.MetaAttributeService;
 import org.atemsource.atem.api.type.EntityType;

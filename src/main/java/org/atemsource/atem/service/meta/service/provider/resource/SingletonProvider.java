@@ -3,6 +3,8 @@ package org.atemsource.atem.service.meta.service.provider.resource;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -37,7 +39,7 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 	@Inject
 	private ObserverPublisher observerPublisher;
 
-	private final Set<Singleton> resources = new HashSet<Singleton>();
+	private final List<Singleton> resources = new LinkedList<Singleton>();
 	
 	private GformContext gformContext;
 
@@ -56,7 +58,7 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 		else
 		{
 			Singleton singleton = new Singleton();
-			singleton.setUriPath(entityRestService.getUri(viewType, id));
+//			singleton.setUriPath(entityRestService.getUri(viewType, id));
 			singleton.setName(originalType.getCode() + "/" + id);
 			ObservationService observationService = viewType.getService(ObservationService.class);
 			if (observationService != null)
@@ -65,7 +67,7 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 					observerPublisher.getChannelPattern(observationService.getScope(viewType, id), viewType.getCode(), id);
 				singleton.setTopic(channelPattern);
 			}
-			singleton.setResourceType(gformContext.create(viewType));
+			//singleton.setResourceType(gformContext.create(viewType));
 			Set<ResourceOperation> resourceOperations = new HashSet<ResourceOperation>();
 			if (originalType.getService(StatefulUpdateService.class) != null)
 			{
@@ -81,7 +83,7 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 	}
 
 	@Override
-	public Set<Singleton> getServices()
+	public List<Singleton> getServices()
 	{
 		return resources;
 	}
@@ -134,5 +136,17 @@ public class SingletonProvider implements ServiceProvider<Singleton>
 	public void setUriPath(String uriPath)
 	{
 		this.uriPath = uriPath;
+	}
+
+	@Override
+	public <O> boolean handles(EntityType<O> entityType) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public <O> ObjectNode getSchema(EntityType<O> entityType) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

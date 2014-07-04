@@ -28,6 +28,7 @@ import org.atemsource.atem.service.meta.service.provider.method.paramcreator.Req
 import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
 import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
+import org.codehaus.jackson.node.ObjectNode;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -55,7 +56,7 @@ public class MethodProvider implements ServiceProvider<Method>
 	@Inject
 	private MethodFactory methodFactory;
 
-	private Set<Method> methods;
+	private List<Method> methods;
 
 	private String packageSearchPath;
 
@@ -73,7 +74,7 @@ public class MethodProvider implements ServiceProvider<Method>
 					new PathMatchingResourcePatternResolver(getClass().getClassLoader());
 				final Resource[] resources = patternResolover.getResources(packageSearchPath);
 
-				methods = new HashSet<Method>();
+				methods = new LinkedList<Method>();
 				for (final Resource candidateResource : resources)
 				{
 					List<Method> methodsInClass = processClass(candidateResource);
@@ -127,7 +128,7 @@ public class MethodProvider implements ServiceProvider<Method>
 		return methodFactory;
 	}
 
-	public Set<Method> getMethods()
+	public List<Method> getMethods()
 	{
 		return methods;
 	}
@@ -143,7 +144,7 @@ public class MethodProvider implements ServiceProvider<Method>
 	}
 
 	@Override
-	public Set<Method> getServices()
+	public List<Method> getServices()
 	{
 		return methods;
 	}
@@ -281,5 +282,17 @@ public class MethodProvider implements ServiceProvider<Method>
 	public void setTransformationBuilderFactory(TransformationBuilderFactory transformationBuilderFactory)
 	{
 		this.transformationBuilderFactory = transformationBuilderFactory;
+	}
+
+	@Override
+	public <O> boolean handles(EntityType<O> entityType) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public <O> ObjectNode getSchema(EntityType<O> entityType) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

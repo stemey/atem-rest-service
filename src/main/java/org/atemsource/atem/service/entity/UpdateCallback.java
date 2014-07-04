@@ -1,5 +1,5 @@
 package org.atemsource.atem.service.entity;
 
-public interface UpdateCallback {
-	public ReturnErrorObject update(Object entity);
+public interface UpdateCallback<O> {
+	public ReturnErrorObject update(O entity);
 }

@@ -4,14 +4,9 @@ import java.util.Set;
 
 import org.atemsource.atem.api.attribute.annotation.Association;
 import org.atemsource.atem.service.meta.service.model.Service;
-import org.atemsource.atem.utility.binding.jackson.NodeConversion;
-import org.atemsource.atem.utility.transform.api.annotation.Conversion;
-import org.codehaus.jackson.node.ObjectNode;
 
 public class AbstractResource extends Service {
 
-	@Conversion(NodeConversion.class)
-	private ObjectNode resourceType;
 
 	@Association(targetType = ResourceOperation.class)
 	private Set<ResourceOperation> singleOperations;
@@ -22,10 +17,6 @@ public class AbstractResource extends Service {
 
 	public AbstractResource() {
 		super();
-	}
-
-	public ObjectNode getResourceType() {
-		return resourceType;
 	}
 
 	public Set<ResourceOperation> getSingleOperations() {
@@ -42,10 +33,6 @@ public class AbstractResource extends Service {
 
 	public boolean isRequest(String requestUrl) {
 		return requestUrl.startsWith(uriPath);
-	}
-
-	public void setResourceType(ObjectNode resourceType) {
-		this.resourceType = resourceType;
 	}
 
 	public void setSingleOperations(

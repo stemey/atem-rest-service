@@ -30,12 +30,15 @@ import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.PrimitiveType;
 import org.atemsource.atem.impl.json.JsonUtils;
 import org.atemsource.atem.impl.meta.DerivedObject;
+import org.atemsource.atem.service.entity.collection.ContentHeaderPagingParser;
 import org.atemsource.atem.service.entity.search.AttributePredicate;
 import org.atemsource.atem.service.entity.search.AttributeSorting;
 import org.atemsource.atem.service.entity.search.Operator;
 import org.atemsource.atem.service.entity.search.Paging;
 import org.atemsource.atem.service.entity.search.Query;
 import org.atemsource.atem.service.entity.search.Sorting;
+import org.atemsource.atem.service.refresolver.CollectionResource;
+import org.atemsource.atem.service.refresolver.RefResolver;
 import org.atemsource.atem.utility.transform.api.ConverterFactory;
 import org.atemsource.atem.utility.transform.api.JacksonTransformationContext;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
@@ -56,29 +59,29 @@ import org.codehaus.jackson.node.ObjectNode;
  */
 public class EntityRestService {
 
-	private static final String CONTENT_RANGE_HEADER = "Content-Range";
 
-	public static final String REST_PATTERN = "/([^/]+)(/([^/]+))?";
+	private RefResolver refResolver;
 
-	public static final Pattern CONTENT_RANGE_PATTERN = Pattern.compile("items=([0-9]+)-([0-9]+)?");
+	
 
-	public static final Pattern SORTING_PATTERN = Pattern.compile("( |\\-)([a-zA-Z0-9]+)");
+	public void setRefResolver(RefResolver refResolver) {
+		this.refResolver = refResolver;
+	}
+
+	public static void setLogger(Logger logger) {
+		EntityRestService.logger = logger;
+	}
+
+	public void setEntityTypeRepository(EntityTypeRepository entityTypeRepository) {
+		this.entityTypeRepository = entityTypeRepository;
+	}
 
 	private static Logger logger = Logger.getLogger(EntityRestService.class);
 
 	private ConverterFactory idConverterfactory;
-
-	private EntityType<EntityType> metaType;
+	
 
 	private ObjectMapper objectMapper;
-
-	private Pattern singleResourcePattern;
-
-	private final String uriPrefix = "/entity/entities";
-
-	private String sortParam = "sortBy";
-
-	private Attribute<?, ?> derivedTypeAttribute;
 
 	@Inject
 	private EntityTypeRepository entityTypeRepository;
@@ -91,16 +94,16 @@ public class EntityRestService {
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	public <O> void doPut(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 		try {
 			String uri = req.getRequestURI();
-			Matcher matcher = singleResourcePattern.matcher(uri);
-			if (matcher.find()) {
-				String type = matcher.group(1);
-				String idAsString = matcher.group(2);
+			TypeAndId<O,ObjectNode> typeAndId = refResolver.parseSingleUri(uri);
+			if (typeAndId != null) {
 				BufferedReader reader = req.getReader();
-				JsonNode jsonNode = objectMapper.readTree(reader);
-				updateEntity(idAsString.substring(1), type, jsonNode);
+				ObjectNode jsonNode = (ObjectNode) objectMapper
+						.readTree(reader);
+				updateEntity(typeAndId, jsonNode);
 			} else {
 				// 404
 				resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -119,15 +122,16 @@ public class EntityRestService {
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws IOException {
 		try {
 			String uri = req.getRequestURI();
-			Matcher matcher = singleResourcePattern.matcher(uri);
-			if (matcher.find()) {
-				String type = matcher.group(1);
+			CollectionResource<?,ObjectNode> collectionResource = refResolver
+					.parseCollectionUri(uri);
+			if (collectionResource != null) {
 				BufferedReader reader = req.getReader();
-				JsonNode jsonNode = objectMapper.readTree(reader);
-				Object returnValue = createEntity(type, jsonNode);
+				ObjectNode jsonNode = (ObjectNode) objectMapper.readTree(reader);
+				Object returnValue = createEntity(resp,collectionResource, jsonNode);
 				objectMapper.writeValue(resp.getWriter(), returnValue);
 			} else {
 				// 404
@@ -147,31 +151,25 @@ public class EntityRestService {
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	public <O,T> void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws  IOException {
 		String uri = req.getRequestURI();
 		try {
-			TypeAndId typeAndId = parse(uri);
+			CollectionResource<O,T> resource = refResolver.parseUri(uri);
 			try {
-				if (typeAndId.getId() == null) {
-
-					// it is a collection resource
-					Paging paging = parsePaging(req);
-					Sorting sorting = parseSorting(req, typeAndId.getEntityType());
-					Query query = parseQuery(req, typeAndId.getEntityType());
-					Result result = readEntities(typeAndId.getEntityType(), query, sorting, paging);
-					int start = paging == null ? 0 : paging.getStart();
-					resp.setHeader(CONTENT_RANGE_HEADER, "items " + start + "-" + result.entities.size() + "/"
-							+ result.totalCount);
-					objectMapper.writeValue(resp.getWriter(), result.entities);
-
-				} else {
-					Object entity = readEntity(typeAndId);
+				if (resource instanceof TypeAndId) {
+					TypeAndId<O,T> typeAndId=(TypeAndId<O, T>) resource;	
+					T entity = readEntity(typeAndId);
 					if (entity == null) {
 						// 404
 						resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 					} else {
 						objectMapper.writeValue(resp.getWriter(), entity);
 					}
+
+				} else {
+					GetCollectionService<O,T> getCollectionService = resource.getOriginalType().getService(GetCollectionService.class);
+					getCollectionService.serveCollection(resource, req, resp);
 				}
 
 			} catch (Exception e) {
@@ -191,20 +189,18 @@ public class EntityRestService {
 	 * @param resp
 	 * @throws IOException
 	 */
-	public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public <O,T> void doDelete(HttpServletRequest req, HttpServletResponse resp)
+			throws IOException {
 		try {
 			String uri = req.getRequestURI();
-			Matcher matcher = singleResourcePattern.matcher(uri);
-			if (matcher.find()) {
-				String type = matcher.group(1);
-
-				String idAsString = matcher.group(2);
-				if (idAsString == null) {
+			TypeAndId<O,T> typeAndId = refResolver.parseSingleUri(uri);
+			if (typeAndId != null) {
+				if (typeAndId.getOriginalId() == null) {
 					// 404
 					resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				} else {
 					// TODO errors should be possible too
-					deleteEntity(idAsString.substring(1), type);
+					deleteEntity(typeAndId.getId(), typeAndId.getOriginalType());
 
 				}
 			} else {
@@ -219,10 +215,10 @@ public class EntityRestService {
 	/**
 	 * 
 	 * @param entityType
-	 * @return the colecion uri for the given type
+	 * @return the collection uri for the given type
 	 */
 	public String getCollectionUri(EntityType<?> entityType) {
-		return uriPrefix + "/" + entityType.getCode();
+		return refResolver.getCollectionUri(entityType);
 	}
 
 	/**
@@ -235,17 +231,6 @@ public class EntityRestService {
 	}
 
 	/**
-	 * get the uri of a single entity
-	 * 
-	 * @param type
-	 * @param id
-	 * @return
-	 */
-	public String getUri(EntityType<?> type, String id) {
-		return uriPrefix + "/" + type.getCode() + "/" + id;
-	}
-
-	/**
 	 * get uri by id
 	 * 
 	 * @param entityType
@@ -253,7 +238,7 @@ public class EntityRestService {
 	 * @return
 	 */
 	public String getUriById(EntityType<?> entityType, Serializable id) {
-		return getUri(entityType, String.valueOf(id));
+		return refResolver.getSingleUri(entityType, String.valueOf(id));
 	}
 
 	/**
@@ -263,7 +248,7 @@ public class EntityRestService {
 	 * @return
 	 */
 	public EntityType<?> getEntityTypeForUri(String url) {
-		return parse(url).getEntityType();
+		return refResolver.parseSingleUri(url).getEntityType();
 	}
 
 	public void setIdConverterfactory(ConverterFactory idConverterfactory) {
@@ -274,32 +259,14 @@ public class EntityRestService {
 		this.objectMapper = objectMapper;
 	}
 
-	@PostConstruct
-	public void initialize() {
-		metaType = entityTypeRepository.getEntityType(EntityType.class);
-		derivedTypeAttribute = metaType.getMetaAttribute(DerivedObject.META_ATTRIBUTE_CODE);
-		singleResourcePattern = Pattern.compile(uriPrefix + REST_PATTERN);
-	}
 
-	private Serializable convertId(String idAsString, EntityType<?> targetType) {
-		// TODO we need to use the type of the transformed attribute
-		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(targetType);
-		@SuppressWarnings("unchecked")
-		EntityType<Object> originalType = (EntityType<Object>) (derivedType == null ? targetType
-				: (EntityType<Object>) derivedType.getOriginalType());
-		IdentityService identityService = originalType.getService(IdentityService.class);
-		if (identityService == null) {
-			throw new TechnicalException("no identityService for " + targetType.getCode());
-		}
-		Class<?> javaType = identityService.getIdType(originalType).getJavaType();
-		return (Serializable) PrimitiveConverterUtils.fromString(javaType, idAsString);
-	}
 
 	private ObjectNode createErrorNode(ReturnErrorObject returnErrorObject) {
 		ObjectNode error = objectMapper.createObjectNode();
 		ArrayNode errors = objectMapper.createArrayNode();
 		error.put("errors", errors);
-		for (org.atemsource.atem.utility.validation.AbstractValidationContext.Error e : returnErrorObject.getErrors()) {
+		for (org.atemsource.atem.utility.validation.AbstractValidationContext.Error e : returnErrorObject
+				.getErrors()) {
 			ObjectNode singleError = objectMapper.createObjectNode();
 			singleError.put("path", e.getPath());
 			singleError.put("message", e.getMessage());
@@ -309,228 +276,81 @@ public class EntityRestService {
 	}
 
 	public static class Result {
-		private ArrayNode entities;
+		public ArrayNode entities;
 
-		private long totalCount;
+		public long totalCount;
 	}
 
-	public TypeAndId parse(String uri) {
-		TypeAndId typeAndId;
-		Matcher matcher = singleResourcePattern.matcher(uri);
-		if (matcher.find()) {
-			String type = matcher.group(1);
-			EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
-			String idAsString = matcher.group(2);
+	
+	
+	
 
-			if (idAsString == null) {
-				typeAndId = new TypeAndId(entityType, null);
-			} else {
-				typeAndId = new TypeAndId(entityType, convertId(idAsString.substring(1), entityType));
-			}
-		} else {
-			throw new IllegalArgumentException("cannotparse uri " + uri);
-		}
-		return typeAndId;
-	}
+	
+	
 
-	private Query parseQuery(HttpServletRequest req, EntityType<?> entityType) {
-		Query query = null;
-		String queryString = req.getParameter("query");
-		if (StringUtils.isNotEmpty(queryString)) {
-			try {
-				ObjectNode node = (ObjectNode) objectMapper.readTree(queryString);
-				JsonNode jsonNode = node.get("op");
-				if (jsonNode != null && !jsonNode.isNull()) {
-					List<AttributePredicate<?>> predicates = new ArrayList<AttributePredicate<?>>();
-					boolean or = jsonNode.getTextValue().equals("or");
-					ArrayNode predicateNodes = (ArrayNode) node.get("data");
-					Iterator<JsonNode> iterator = predicateNodes.iterator();
-					while (iterator.hasNext()) {
-						ObjectNode next = (ObjectNode) iterator.next();
-						Operator operator = parseOperator(next.get("op").getTextValue());
-						ArrayNode operands = (ArrayNode) next.get("data");
-						String attributeCode = ((ObjectNode) operands.get(0)).get("data").getTextValue();
-						SingleAttribute<?> attribute = (SingleAttribute<?>) entityType.getAttribute(attributeCode);
-						Object value = JsonUtils.convertToJava(((ObjectNode) operands.get(1)).get("data"));
-						predicates.add(new AttributePredicate(attribute, operator, value));
+	private <O,T >T readEntity(final TypeAndId<O,T> typeAndId) {
+		FindByIdService findByIdService = typeAndId.getOriginalType()
+				.getService(FindByIdService.class);
+
+		T json = findByIdService.findById(typeAndId.getOriginalType(), typeAndId.getId(),
+				new SingleCallback<O,T>() {
+
+					@Override
+					public T process(O entity) {
+						UniTransformation<O, T> ab = (UniTransformation<O, T>) typeAndId
+								.getTransformation().getAB();
+						return ab.convert(entity,
+								new JacksonTransformationContext(
+										entityTypeRepository));
 					}
-					query = new Query(or, predicates);
-				}
-			} catch (JsonProcessingException e) {
-				throw new TechnicalException("cannot parse query", e);
-			} catch (IOException e) {
-				throw new TechnicalException("cannot parse query", e);
-			}
-		} else {
-			List<AttributePredicate<?>> predicates = new ArrayList<AttributePredicate<?>>();
-			Iterator<Map.Entry<String, String[]>> iterator = req.getParameterMap().entrySet().iterator();
-			while (iterator.hasNext()) {
-				Map.Entry<String, String[]> next = iterator.next();
-				String attributeCode = next.getKey();
-				SingleAttribute<?> attribute = (SingleAttribute<?>) entityType.getAttribute(attributeCode);
-				if (attribute != null && attribute.getTargetType() instanceof PrimitiveType) {
-					Object value = ((PrimitiveType) attribute.getTargetType()).deserialize(next.getValue()[0]);
-					Operator operator;
-					if (value instanceof String) {
-						String text = (String) value;
-						if (text.endsWith("*")) {
-							operator = Operator.LIKE;
-							value = text.substring(0, text.length() - 1);
-						}
-						else {
-							operator = Operator.EQUAL;
-						}
-					} else {
-						operator = Operator.EQUAL;
-					}
-					predicates.add(new AttributePredicate(attribute, operator, value));
-				}
-			}
-			query = new Query(false, predicates);
-
-		}
-		return query;
-
-	}
-
-	private Operator parseOperator(String op) {
-		if (op.startsWith("greater")) {
-			if (endswithEqual(op)) {
-				return Operator.GET;
-			} else {
-				return Operator.GT;
-			}
-		} else if (op.startsWith("less")) {
-			if (endswithEqual(op)) {
-				return Operator.LET;
-			} else {
-				return Operator.LT;
-			}
-		} else if (op.equals("equal")) {
-			return Operator.EQUAL;
-		} else if (op.equals("contain")) {
-			return Operator.LIKE;
-		} else {
-			throw new IllegalArgumentException("unknown operator " + op);
-		}
-	}
-
-	private boolean endswithEqual(String op) {
-		return op.endsWith("Equal");
-	}
-
-	private Paging parsePaging(HttpServletRequest req) {
-		Paging paging = null;
-		String contentRange = req.getHeader("Range");
-		if (contentRange != null) {
-			Matcher matcher = CONTENT_RANGE_PATTERN.matcher(contentRange);
-			if (matcher.find() && matcher.group(1) != null && matcher.group(2) != null) {
-				paging = new Paging(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)));
-			}
-		}
-		return paging;
-	}
-
-	private Sorting parseSorting(HttpServletRequest req, EntityType<?> entityType) {
-		Sorting sorting = null;
-		String sortingValue = req.getParameter(sortParam);
-		List<AttributeSorting> attributeSortings = new LinkedList<AttributeSorting>();
-		if (sortingValue != null) {
-			Matcher matcher = SORTING_PATTERN.matcher(sortingValue);
-			while (matcher.find()) {
-				String attributeCode = matcher.group(2);
-				String dir = matcher.group(1);
-				SingleAttribute<?> attribute = (SingleAttribute<?>) entityType.getAttribute(attributeCode);
-				if (attribute == null) {
-					throw new TechnicalException("cannot find sorting attribute " + attributeCode);
-				}
-				attributeSortings.add(new AttributeSorting(attribute, !dir.equals("-")));
-			}
-			sorting = new Sorting(attributeSortings);
-		}
-		return sorting;
-	}
-
-	private Result readEntities(EntityType<?> entityType, Query query, Sorting sorting, Paging paging) {
-		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
-		FindByTypeService findByTypeService = originalType.getService(FindByTypeService.class);
-		Object result = findByTypeService.getEntities(originalType, query, sorting, paging, new ListCallback<Object>() {
-
-			@Override
-			public Object process(List<Object> entities, long totalCount) {
-				UniTransformation<Object, ObjectNode> ab = (UniTransformation<Object, ObjectNode>) derivedType
-						.getTransformation().getAB();
-				Result result = new Result();
-				ArrayNode arrayNode = objectMapper.createArrayNode();
-				for (Object entity : entities) {
-					ObjectNode json = ab.convert(entity, new JacksonTransformationContext(entityTypeRepository));
-					arrayNode.add(json);
-				}
-				result.entities = arrayNode;
-				result.totalCount = totalCount;
-				return result;
-			}
-		});
-		return (Result) result;
-	}
-
-	private Object readEntity(TypeAndId typeAndId) {
-		EntityType<?> entityType = typeAndId.getEntityType();
-		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
-		FindByIdService findByIdService = originalType.getService(FindByIdService.class);
-
-		Object json = findByIdService.findById(originalType, typeAndId.getId(), new SingleCallback<Object>() {
-
-			@Override
-			public Object process(Object entity) {
-				UniTransformation<Object, ObjectNode> ab = (UniTransformation<Object, ObjectNode>) derivedType
-						.getTransformation().getAB();
-				return ab.convert(entity, new JacksonTransformationContext(entityTypeRepository));
-			}
-		});
+				});
 		return json;
 	}
 
-	private ObjectNode updateEntity(String idAsString, String type, final Object updatedObject) {
-		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
-		SimpleValidationContext context = new SimpleValidationContext(entityTypeRepository);
-		ValidationService validationService = entityType.getService(ValidationService.class);
+	private <O,T>  ObjectNode updateEntity(final TypeAndId<O,T> typeAndId,
+			final T updatedObject) {
+		SimpleValidationContext context = new SimpleValidationContext(
+				entityTypeRepository);
+		ValidationService validationService = typeAndId.getEntityType()
+				.getService(ValidationService.class);
 		if (validationService != null) {
-			validationService.validate(entityType, context, updatedObject);
+			validationService.validate(typeAndId.getEntityType(), context,
+					updatedObject);
 			if (context.getErrors().size() > 0) {
 				ReturnErrorObject returnErrorObject = new ReturnErrorObject();
 				returnErrorObject.setErrors(context.getErrors());
 				return createErrorNode(returnErrorObject);
 			}
 		}
-		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
-		Serializable id = convertId(idAsString, entityType);
-		FindByIdService findByIdService = originalType.getService(FindByIdService.class);
-		StatefulUpdateService crudService = originalType.getService(StatefulUpdateService.class);
+		StatefulUpdateService crudService = typeAndId.getOriginalType()
+				.getService(StatefulUpdateService.class);
 
-		ReturnErrorObject returnErrorObject = crudService.update(id, originalType, new UpdateCallback() {
+		ReturnErrorObject returnErrorObject = crudService.update(
+				typeAndId.getOriginalId(), typeAndId.getOriginalType(),
+				new UpdateCallback<O>() {
 
-			@Override
-			public ReturnErrorObject update(Object entity) {
-				UniTransformation<Object, Object> ba = (UniTransformation<Object, Object>) derivedType
-						.getTransformation().getBA();
-				ba.merge(updatedObject, entity, new JacksonTransformationContext(entityTypeRepository));
-				ValidationService validationService = originalType.getService(ValidationService.class);
-				if (validationService != null) {
-					SimpleValidationContext context = new SimpleValidationContext(entityTypeRepository);
-					validationService.validate(originalType, context, entity);
-					if (context.getErrors().size() > 0) {
-						ReturnErrorObject returnErrorObject = new ReturnErrorObject();
-						returnErrorObject.setErrors(context.getErrors());
-						return returnErrorObject;
+					@Override
+					public ReturnErrorObject update(O entity) {
+						refResolver.mergeIn(typeAndId.getEntityType(), entity, updatedObject);
+						
+						EntityType<O> originalType = typeAndId
+								.getOriginalType();
+						ValidationService validationService = originalType
+								.getService(ValidationService.class);
+						if (validationService != null) {
+							SimpleValidationContext context = new SimpleValidationContext(
+									entityTypeRepository);
+							validationService.validate(originalType, context,
+									entity);
+							if (context.getErrors().size() > 0) {
+								ReturnErrorObject returnErrorObject = new ReturnErrorObject();
+								returnErrorObject.setErrors(context.getErrors());
+								return returnErrorObject;
+							}
+						}
+						return null;
 					}
-				}
-				return null;
-			}
-		});
+				});
 		if (returnErrorObject == null) {
 			return null;
 		} else {
@@ -538,55 +358,50 @@ public class EntityRestService {
 		}
 	}
 
-	private Object createEntity(String type, JsonNode entity) {
-		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
-		SimpleValidationContext context = new SimpleValidationContext(entityTypeRepository);
-		ValidationService validationService = entityType.getService(ValidationService.class);
+
+	
+	private <O> Object createEntity(HttpServletResponse response,CollectionResource<O,ObjectNode> resource,
+			ObjectNode entity) {
+		SimpleValidationContext context = new SimpleValidationContext(
+				entityTypeRepository);
+		ValidationService validationService = resource.getEntityType()
+				.getService(ValidationService.class);
 		if (validationService != null) {
-			validationService.validate(entityType, context, entity);
+			validationService.validate(resource.getEntityType(), context,
+					entity);
 			if (context.getErrors().size() > 0) {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				ReturnErrorObject returnErrorObject = new ReturnErrorObject();
 				returnErrorObject.setErrors(context.getErrors());
 				return createErrorNode(returnErrorObject);
 			}
 		}
-		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
 
-		PersistenceService persistenceService = originalType.getService(PersistenceService.class);
+		PersistenceService persistenceService = resource.getOriginalType()
+				.getService(PersistenceService.class);
 
-		UniTransformation<JsonNode, Object> transformation = (UniTransformation<JsonNode, Object>) derivedType
-				.getTransformation().getBA();
-		// TODO insert should be able to return validation errors
-		Object transformedEntity = transformation.convert(entity,
-				new JacksonTransformationContext(entityTypeRepository));
-
-		Serializable id = persistenceService.insert(originalType, transformedEntity);
+		O transformedEntity =refResolver.in(resource.getEntityType(),entity);
+		
+		Serializable id = persistenceService.insert(resource.getOriginalType(),
+				transformedEntity);
 
 		return id;
 	}
 
-	private void handle500Error(HttpServletResponse resp, Exception e) throws IOException {
+	private void handle500Error(HttpServletResponse resp, Exception e)
+			throws IOException {
 		logger.error("error when serving request", e);
 		resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		e.printStackTrace(resp.getWriter());
 		resp.flushBuffer();
 	}
 
-	private void deleteEntity(String idAsString, String type) {
-		EntityType<Object> entityType = entityTypeRepository.getEntityType(type);
-		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		final EntityType<Object> originalType = (EntityType<Object>) derivedType.getOriginalType();
-		Serializable id = convertId(idAsString, originalType);
-		DeletionService deletionService = originalType.getService(DeletionService.class);
+	private void deleteEntity(Serializable id, EntityType<?> entityType) {
+		DeletionService deletionService = entityType
+				.getService(DeletionService.class);
 		if (deletionService != null) {
-			deletionService.delete(originalType, id);
+			deletionService.delete(entityType, id);
 		}
-	}
-
-	public EntityType<Object> getOriginalType(EntityType<?> entityType) {
-		final DerivedType derivedType = (DerivedType) derivedTypeAttribute.getValue(entityType);
-		return (EntityType<Object>) (derivedType == null ? entityType : derivedType.getOriginalType());
 	}
 
 }

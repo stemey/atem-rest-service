@@ -5,13 +5,13 @@ package org.atemsource.atem.service.entity;
  *
  * @param <E>
  */
-public interface SingleCallback<E>
+public interface SingleCallback<O,T>
 {
 	/**
 	 * called when the entity is loaded. Callback necessary for lazy loading references entities.
 	 * @param entity 
 	 * @return the transformed entity
 	 */
-	E process(E entity);
+	T process(O entity);
 
 }

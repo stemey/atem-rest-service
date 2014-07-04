@@ -2,13 +2,15 @@ package org.atemsource.atem.service.entity;
 
 import java.util.List;
 
+import org.atemsource.atem.service.entity.EntityRestService.Result;
+
 /**
  *  callback to transform a list of entities
  * @author stemey
  *
  * @param <E>
  */
-public interface ListCallback<E>
+public interface ListCallback<O>
 {
 	/**
 	 * 
@@ -16,5 +18,5 @@ public interface ListCallback<E>
 	 * @param totalCount
 	 * @return transformed entities
 	 */
-	Object process(List<E> entities, long totalCount);
+	Result process(List<O> entities, long totalCount);
 }

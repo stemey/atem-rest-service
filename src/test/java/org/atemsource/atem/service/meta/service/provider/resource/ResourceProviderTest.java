@@ -1,7 +1,7 @@
 package org.atemsource.atem.service.meta.service.provider.resource;
 
 import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -23,16 +23,12 @@ public class ResourceProviderTest {
 
 	@Test
 	public void testIntegration() {
-		Set<Resource> services = resourceProvider.getServices();
+		List<Resource> services = resourceProvider.getServices();
 		Assert.assertEquals(2, services.size());
 		Iterator<Resource> iterator = services.iterator();
 		Resource resource1 = iterator.next();
-		ObjectNode resourceType = resource1.getResourceType();
-		Assert.assertNotNull(resourceType);
 		
 		Resource resource2 = iterator.next();
-		ObjectNode resourceType2 = resource2.getResourceType();
-		Assert.assertNotNull(resourceType2);
 	}
 
 }

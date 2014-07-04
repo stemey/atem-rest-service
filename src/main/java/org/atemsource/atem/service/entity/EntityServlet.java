@@ -2,6 +2,7 @@ package org.atemsource.atem.service.entity;
 
 import java.io.IOException;
 
+import javax.persistence.EntityManager;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -11,6 +12,8 @@ import org.atemsource.atem.api.BeanLocator;
 
 public class EntityServlet extends HttpServlet{
 
+	
+	
 	/**
 	 * 
 	 */

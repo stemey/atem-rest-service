@@ -25,5 +25,5 @@ public interface FindByIdService
 	 * @param id the id
 	 * @return the object
 	 */
-	public <E> Object findById(EntityType<E> entityType, Serializable id, SingleCallback<E> singleCallback);
+	public <O,T> T findById(EntityType<O> entityType, Serializable id, SingleCallback<O,T> singleCallback);
 }

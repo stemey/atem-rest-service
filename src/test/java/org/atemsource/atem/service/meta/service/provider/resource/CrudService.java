@@ -10,6 +10,7 @@ import org.atemsource.atem.api.service.IdentityAttributeService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.Type;
 import org.atemsource.atem.impl.common.attribute.primitive.PrimitiveTypeFactory;
+import org.atemsource.atem.service.entity.EntityRestService.Result;
 import org.atemsource.atem.service.entity.FindByTypeService;
 import org.atemsource.atem.service.entity.ListCallback;
 import org.atemsource.atem.service.entity.search.Paging;
@@ -40,8 +41,8 @@ public class CrudService implements FindByTypeService,IdentityAttributeService{
 	}
 
 	@Override
-	public <E> Object getEntities(EntityType<E> entityType, Query query,
-			Sorting sorting, Paging paging, ListCallback<E> listCallback) {
+	public <O> Result getEntities(EntityType<O> entityType, Query query,
+			Sorting sorting, Paging paging, ListCallback<O> listCallback) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -52,6 +53,7 @@ public class CrudService implements FindByTypeService,IdentityAttributeService{
 		return null;
 	}
 
+	
 	
 
 }

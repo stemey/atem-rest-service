@@ -23,6 +23,7 @@ import org.atemsource.atem.api.service.IdentityAttributeService;
 import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.Type;
+import org.atemsource.atem.service.entity.EntityRestService.Result;
 import org.atemsource.atem.service.entity.FindByIdService;
 import org.atemsource.atem.service.entity.FindByTypeService;
 import org.atemsource.atem.service.entity.ListCallback;
@@ -41,8 +42,9 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-public class JpaCrudService implements IdentityAttributeService, FindByIdService,
-		org.atemsource.atem.api.service.FindByIdService, FindByTypeService, PersistenceService, StatefulUpdateService,
+public class JpaCrudService implements IdentityAttributeService,
+		FindByIdService, org.atemsource.atem.api.service.FindByIdService,
+		FindByTypeService, PersistenceService, StatefulUpdateService,
 		DeletionService {
 
 	private EntityManager entityManager;
@@ -51,8 +53,9 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 
 	public void delete(EntityType<?> originalType, Serializable id) {
 
-		TransactionStatus transaction = jpaTransactionManager.getTransaction(new DefaultTransactionDefinition(
-				TransactionDefinition.PROPAGATION_REQUIRED));
+		TransactionStatus transaction = jpaTransactionManager
+				.getTransaction(new DefaultTransactionDefinition(
+						TransactionDefinition.PROPAGATION_REQUIRED));
 		try {
 			Object entity = entityManager.find(originalType.getJavaType(), id);
 			entityManager.remove(entity);
@@ -65,11 +68,14 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		}
 	}
 
-	public <E> Object findById(EntityType<E> entityType, Serializable id, SingleCallback<E> callback) {
-		TransactionStatus transaction = jpaTransactionManager.getTransaction(new DefaultTransactionDefinition(
-				TransactionDefinition.PROPAGATION_REQUIRED));
+	public <O, T> T findById(EntityType<O> entityType, Serializable id,
+			SingleCallback<O, T> callback) {
+		TransactionStatus transaction = jpaTransactionManager
+				.getTransaction(new DefaultTransactionDefinition(
+						TransactionDefinition.PROPAGATION_REQUIRED));
 		try {
-			Object result = callback.process(entityManager.find(entityType.getJavaType(), id));
+			T result = callback.process(entityManager.find(
+					entityType.getJavaType(), id));
 			jpaTransactionManager.commit(transaction);
 			return result;
 		} catch (Exception e) {
@@ -80,20 +86,24 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		}
 	}
 
-	public <E> Object getEntities(EntityType<E> originalType, Query query, Sorting sorting, Paging paging,
-			ListCallback<E> callback) {
+	@Override
+	public <O> Result getEntities(EntityType<O> originalType, Query query,
+			Sorting sorting, Paging paging, ListCallback<O> callback) {
 
-		TransactionStatus transaction = jpaTransactionManager.getTransaction(new DefaultTransactionDefinition(
-				TransactionDefinition.PROPAGATION_REQUIRED));
+		TransactionStatus transaction = jpaTransactionManager
+				.getTransaction(new DefaultTransactionDefinition(
+						TransactionDefinition.PROPAGATION_REQUIRED));
 		try {
 
-			TypedQuery<E> jpaQuery = createListQuery(originalType, query, sorting, paging);
-			List<E> resultList = jpaQuery.getResultList();
+			TypedQuery<O> jpaQuery = createListQuery(originalType, query,
+					sorting, paging);
+			List<O> resultList = jpaQuery.getResultList();
 
-			TypedQuery<Long> totalCountQuery = createTotalCountQuery(originalType, query);
+			TypedQuery<Long> totalCountQuery = createTotalCountQuery(
+					originalType, query);
 			long totalCount = totalCountQuery.getSingleResult();
 
-			Object result = callback.process(resultList, totalCount);
+			Result result = callback.process(resultList, totalCount);
 
 			jpaTransactionManager.commit(transaction);
 			return result;
@@ -105,8 +115,10 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		}
 	}
 
-	protected <E> TypedQuery<E> createListQuery(EntityType<E> originalType, Query query, Sorting sorting, Paging paging) {
-		CriteriaQuery<E> criteriaQuery = entityManager.getCriteriaBuilder().createQuery(originalType.getJavaType());
+	protected <E> TypedQuery<E> createListQuery(EntityType<E> originalType,
+			Query query, Sorting sorting, Paging paging) {
+		CriteriaQuery<E> criteriaQuery = entityManager.getCriteriaBuilder()
+				.createQuery(originalType.getJavaType());
 		Root<E> from = criteriaQuery.from(originalType.getJavaType());
 		if (query != null) {
 			criteriaQuery.where(createQuery(from, query));
@@ -116,14 +128,17 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		}
 		TypedQuery<E> jpaQuery = entityManager.createQuery(criteriaQuery);
 		if (paging != null) {
-			jpaQuery.setMaxResults(paging.getCount()).setFirstResult(paging.getStart());
+			jpaQuery.setMaxResults(paging.getCount()).setFirstResult(
+					paging.getStart());
 		}
 		return jpaQuery;
 	}
 
-	protected TypedQuery<Long> createTotalCountQuery(EntityType<?> originalType, Query query) {
+	protected TypedQuery<Long> createTotalCountQuery(
+			EntityType<?> originalType, Query query) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+		CriteriaQuery<Long> criteriaQuery = criteriaBuilder
+				.createQuery(Long.class);
 		Root<?> from = criteriaQuery.from(originalType.getJavaType());
 		criteriaQuery.select(criteriaBuilder.count(from));
 		if (query != null) {
@@ -152,13 +167,20 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		return getIdAttribute(entityType).getValue(entity);
 	}
 
-	public SingleAttribute<? extends Serializable> getIdAttribute(EntityType<?> originalType) {
-		return (SingleAttribute<? extends Serializable>) originalType.getAttribute(getIdentityValue(originalType)
-				.getAttributeCode());
+	public SingleAttribute<? extends Serializable> getIdAttribute(
+			EntityType<?> originalType) {
+		Identity identityValue = getIdentityValue(originalType);
+		if (identityValue == null) {
+			return null;
+		} else {
+			return (SingleAttribute<? extends Serializable>) originalType
+					.getAttribute(identityValue.getAttributeCode());
+		}
 	}
 
 	protected Identity getIdentityValue(EntityType<?> originalType) {
-		Attribute getIdentityValue = originalType.getMetaType().getMetaAttribute(Identity.META_ATTRIBUTE_CODE);
+		Attribute getIdentityValue = originalType.getMetaType()
+				.getMetaAttribute(Identity.META_ATTRIBUTE_CODE);
 		return (Identity) getIdentityValue.getValue(originalType);
 	}
 
@@ -167,8 +189,9 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 	}
 
 	public <E> Serializable insert(EntityType<E> originalType, E entity) {
-		TransactionStatus transaction = jpaTransactionManager.getTransaction(new DefaultTransactionDefinition(
-				TransactionDefinition.PROPAGATION_REQUIRED));
+		TransactionStatus transaction = jpaTransactionManager
+				.getTransaction(new DefaultTransactionDefinition(
+						TransactionDefinition.PROPAGATION_REQUIRED));
 		try {
 			entityManager.persist(entity);
 			jpaTransactionManager.commit(transaction);
@@ -189,15 +212,19 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		this.entityManager = entityManager;
 	}
 
-	public void setJpaTransactionManager(JpaTransactionManager jpaTransactionManager) {
+	public void setJpaTransactionManager(
+			JpaTransactionManager jpaTransactionManager) {
 		this.jpaTransactionManager = jpaTransactionManager;
 	}
 
-	public ReturnErrorObject update(Serializable id, EntityType<?> originalType, UpdateCallback callback) {
-		TransactionStatus transaction = jpaTransactionManager.getTransaction(new DefaultTransactionDefinition(
-				TransactionDefinition.PROPAGATION_REQUIRED));
+	public ReturnErrorObject update(Serializable id,
+			EntityType<?> originalType, UpdateCallback callback) {
+		TransactionStatus transaction = jpaTransactionManager
+				.getTransaction(new DefaultTransactionDefinition(
+						TransactionDefinition.PROPAGATION_REQUIRED));
 		try {
-			Object persitentEntity = entityManager.find(originalType.getJavaType(), id);
+			Object persitentEntity = entityManager.find(
+					originalType.getJavaType(), id);
 			ReturnErrorObject errorObject = callback.update(persitentEntity);
 			entityManager.merge(persitentEntity);
 			jpaTransactionManager.commit(transaction);
@@ -220,18 +247,22 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		for (AttributePredicate<?> attributePredicate : query.getPredicates()) {
 			SingleAttribute<?> attribute = attributePredicate.getAttribute();
 			Path path = root.get(attribute.getCode());
-			restrictions.add(createSubPredicate(criteriaBuilder, attributePredicate, path));
+			restrictions.add(createSubPredicate(criteriaBuilder,
+					attributePredicate, path));
 		}
 		Predicate result;
 		if (query.isOr()) {
-			result = criteriaBuilder.or(restrictions.toArray(new Predicate[restrictions.size()]));
+			result = criteriaBuilder.or(restrictions
+					.toArray(new Predicate[restrictions.size()]));
 		} else {
-			result = criteriaBuilder.and(restrictions.toArray(new Predicate[restrictions.size()]));
+			result = criteriaBuilder.and(restrictions
+					.toArray(new Predicate[restrictions.size()]));
 		}
 		return result;
 	}
 
-	protected <A extends Comparable> Predicate createSubPredicate(CriteriaBuilder criteriaBuilder,
+	protected <A extends Comparable> Predicate createSubPredicate(
+			CriteriaBuilder criteriaBuilder,
 			AttributePredicate<?> attributePredicate, Path path) {
 		A value = (A) attributePredicate.getValue();
 		switch (attributePredicate.getOperator()) {
@@ -246,11 +277,12 @@ public class JpaCrudService implements IdentityAttributeService, FindByIdService
 		case LET:
 			return criteriaBuilder.lessThanOrEqualTo(path, value);
 		case LIKE:
-			// for grid: we need to add  % 
-			String param = ((String)attributePredicate.getValue())+"%";
+			// for grid: we need to add %
+			String param = ((String) attributePredicate.getValue()) + "%";
 			return criteriaBuilder.like((Expression<String>) path, param);
 		default:
-			throw new IllegalStateException("operator not implmeneted " + attributePredicate.getOperator());
+			throw new IllegalStateException("operator not implmeneted "
+					+ attributePredicate.getOperator());
 		}
 	}
 

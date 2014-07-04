@@ -53,7 +53,8 @@
 		</property>
 	</bean>
 
-		<bean class="org.atemsource.atem.service.meta.service.provider.MetaProvider">
+	<bean id="metaProvider"
+		class="org.atemsource.atem.service.meta.service.provider.MetaProvider">
 		<property name="serviceProviders">
 			<list>
 				<ref bean="example-provider" />
