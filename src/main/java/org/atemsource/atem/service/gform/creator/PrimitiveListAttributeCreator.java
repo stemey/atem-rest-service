@@ -8,6 +8,7 @@ import org.atemsource.atem.service.gform.AttributeBuilder;
 import org.atemsource.atem.service.gform.AttributeCreator;
 import org.atemsource.atem.service.gform.GformContext;
 import org.atemsource.atem.service.gform.TypeBuilder;
+import org.atemsource.atem.service.gform.TypeCreator;
 
 public class PrimitiveListAttributeCreator extends AttributeCreator{
 	
@@ -20,7 +21,9 @@ public class PrimitiveListAttributeCreator extends AttributeCreator{
 		if (attribute.getTargetType() instanceof OrderableCollection) {
 			attributeBuilder.getNode().put("reorderable",true);
 		}
-		getCtx().getTypeCreator(attribute).create(attributeBuilder.element(), attribute);
+		
+		TypeCreator typeCreator = getCtx().getTypeCreator(attribute);
+		typeCreator.create(attributeBuilder.element(), attribute);
 	}
 
 	@Override

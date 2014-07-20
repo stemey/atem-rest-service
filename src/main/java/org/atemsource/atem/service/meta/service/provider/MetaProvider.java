@@ -1,5 +1,6 @@
 package org.atemsource.atem.service.meta.service.provider;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,7 +13,6 @@ import org.atemsource.atem.service.meta.service.model.Service;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class MetaProvider {
-	private GformContext gformContext;
 
 	private List<ServiceProvider<Service>> serviceProviders;
 
@@ -30,22 +30,22 @@ public class MetaProvider {
 		return schema;
 	}
 
-	public void setGformContext(GformContext gformContext) {
-		this.gformContext = gformContext;
-	}
-
 	public void setServiceProviders(
 			List<ServiceProvider<Service>> serviceProviders) {
 		this.serviceProviders = serviceProviders;
 	}
 
-	public Category getCategory() {
+	public Category getCategory(String baseUri) {
 		Category category = new Category();
+		List<Service> resources = new ArrayList<Service>();
 		for (ServiceProvider<Service> provider : serviceProviders) {
 			ServiceGroup group = new ServiceGroup();
 			category.add(group);
 			group.setServices(provider.getServices());
+			resources.addAll(provider.getServices());
 		}
+		category.setResources(resources);
+		category.setBasePath(baseUri);
 		return category;
 	}
 

@@ -13,13 +13,47 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class JsonRefConverter<O> extends
-		AbstractLocalConverter<O, ObjectNode> {
-
+public class JsonRefConverter<O> extends AbstractLocalConverter<O, ObjectNode> {
 
 	private RefResolver refResolver;
 	private ObjectMapper objectMapper;
-	
+	private EntityType<ObjectNode> jsonType;
+
+	public JsonRefConverter() {
+		super();
+	}
+
+	public JsonRefConverter(RefResolver refResolver, ObjectMapper objectMapper,
+			EntityType<O> entityType, EntityType<ObjectNode> jsonType) {
+		super();
+		this.refResolver = refResolver;
+		this.objectMapper = objectMapper;
+		setTypeB(new JsonRefTypeImpl(refResolver,jsonType));
+		setTypeA(entityType);
+		this.jsonType=jsonType;
+	}
+
+	public O convertBA(ObjectNode b, TransformationContext ctx) {
+		if (b == null || b.isNull()) {
+			return null;
+		} else {
+			JsonNode jsonNode = b.get("$ref");
+			if (jsonNode == null || jsonNode.isNull()) {
+				return null;
+			} else {
+				TypeAndId<O, ObjectNode> typeAndId = refResolver
+						.parseSingleUri(jsonNode.getTextValue());
+				FindByIdService findByIdService;
+				findByIdService = typeAndId.getOriginalType().getService(
+						FindByIdService.class);
+				return findByIdService.findById(typeAndId.getOriginalType(),
+						typeAndId.getId());
+
+			}
+		}
+
+	}
+
 	public ObjectNode convertAB(O a, TransformationContext ctx) {
 		ObjectNode node = objectMapper.createObjectNode();
 		if (a == null) {
@@ -35,47 +69,12 @@ public class JsonRefConverter<O> extends
 				// EntityType<Object> entityTypeB =get
 				Serializable value = identityAttributeService.getIdAttribute(
 						entityTypeByA).getValue(a);
-				String uri = refResolver.getSingleUri(entityTypeByA, value);
+				
+				String uri = refResolver.getSingleUri(jsonType, value);
 				node.put("$ref", uri);
 			}
 		}
 		return node;
 	}
-
-	public JsonRefConverter() {
-		super();
-	}
-
-	public JsonRefConverter(
-			RefResolver refResolver, ObjectMapper objectMapper,
-			EntityType<O> entityType) {
-		super();
-		this.refResolver = refResolver;
-		this.objectMapper = objectMapper;
-		setTypeB(new JsonRefTypeImpl(entityType.getCode()));
-		setTypeA(entityType);
-	}
-
-	public  O convertBA(ObjectNode b, TransformationContext ctx) {
-		if (b == null || b.isNull()) {
-			return null;
-		} else {
-			JsonNode jsonNode = b.get("$ref");
-			if (jsonNode == null || jsonNode.isNull()) {
-				return null;
-			} else {
-				TypeAndId<O,ObjectNode> typeAndId = refResolver.parseSingleUri(jsonNode
-						.getTextValue());
-				FindByIdService findByIdService;
-				findByIdService = typeAndId.getEntityType().getService(
-						FindByIdService.class);
-				return findByIdService.findById(typeAndId.getOriginalType(),
-						typeAndId.getId());
-
-			}
-		}
-
-	}
-
 
 }

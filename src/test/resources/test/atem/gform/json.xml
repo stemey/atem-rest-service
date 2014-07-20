@@ -18,6 +18,10 @@
 
 	<import resource="classpath:/atem/jackson/entitytype-example.xml" />
 	<import resource="classpath:/meta/utility/transform-constraint.xml" />
+	<import resource="classpath:/atem/service/gform/gform.xml" />
+	
+	<bean id="refResolver" class="org.atemsource.atem.service.refresolver.RefResolverImpl"></bean>
+	<bean id="schemaRefResolver" class="org.atemsource.atem.service.meta.service.provider.resource.SchemaRefResolver"></bean>
 	
 
 	<bean id="atem-repository"

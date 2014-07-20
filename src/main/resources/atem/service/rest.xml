@@ -27,6 +27,7 @@
 	<!-- json repository -->
 
 	<bean id="atem-json-repository" class="org.atemsource.atem.impl.json.JsonEntityTypeRepository">
+	<property name="typeProperty" value="XXX"/>
 		<property name="objectMapper">
 			<bean class="org.codehaus.jackson.map.ObjectMapper" />
 		</property>

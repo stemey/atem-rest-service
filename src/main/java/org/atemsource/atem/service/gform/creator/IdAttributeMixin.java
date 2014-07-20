@@ -26,7 +26,7 @@ public class IdAttributeMixin implements AttributeCreatorMixins {
 				if (identityAttributeService != null) {
 					SingleAttribute<?> idAttribute = identityAttributeService
 							.getIdAttribute(attribute.getEntityType());
-					if (idAttribute != null) {
+					if (idAttribute != null && idAttribute==attribute) {
 						Attribute derivedIdAttribute = derivedType
 								.findDerived(idAttribute);
 						if (derivedIdAttribute != null) {

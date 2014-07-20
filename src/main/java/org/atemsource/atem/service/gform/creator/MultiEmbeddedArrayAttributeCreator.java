@@ -11,6 +11,7 @@ import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.attribute.CollectionAttribute;
 import org.atemsource.atem.api.attribute.relation.SingleAttribute;
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.impl.json.JsonEntityTypeImpl;
 import org.atemsource.atem.service.gform.AttributeBuilder;
 import org.atemsource.atem.service.gform.GformContext;
 import org.atemsource.atem.service.gform.GroupBuilder;
@@ -25,15 +26,16 @@ public class MultiEmbeddedArrayAttributeCreator extends MultiTypeAttributeCreato
 				&& attribute instanceof CollectionAttribute<?, ?>) {
 			EntityType<?> targetType = (EntityType<?>) attribute
 					.getTargetType();
-			handles = targetType.getSubEntityTypes().size() > 0;
+			handles = targetType.getSubEntityTypes().size() >0;
 		}
 		return handles;
 	}
 
 	@Override
 	public void addMore(AttributeBuilder attributeBuilder, Attribute attribute) {
-		EntityType<?> targetType = (EntityType<?>) attribute.getTargetType();
+		JsonEntityTypeImpl targetType = (JsonEntityTypeImpl) attribute.getTargetType();
 		attributeBuilder.type("array");
+		attributeBuilder.getNode().put("typeProperty",targetType.getTypeProperty());
 		createGroups(attributeBuilder, targetType);
 	}
 

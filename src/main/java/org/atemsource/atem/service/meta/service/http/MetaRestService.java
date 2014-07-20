@@ -7,15 +7,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.atemsource.atem.api.type.EntityType;
+import org.atemsource.atem.impl.meta.DerivedObject;
+import org.atemsource.atem.service.meta.service.Cors;
 import org.atemsource.atem.service.meta.service.provider.Category;
 import org.atemsource.atem.service.meta.service.provider.MetaProvider;
 import org.atemsource.atem.service.meta.service.provider.resource.SchemaRefResolver;
 import org.atemsource.atem.utility.binding.Binder;
+import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class MetaRestService {
 	private MetaProvider metaProvider;
+	
+	private Cors cors = new Cors();
 
 	private SchemaRefResolver schemaRefResolver;
 
@@ -41,6 +46,7 @@ public class MetaRestService {
 
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
+		cors.appendCors(resp);
 		if (schemaRefResolver.isResourceListing(req.getRequestURI())) {
 			getResourceListing(req, resp);
 		} else {
@@ -74,7 +80,9 @@ public class MetaRestService {
 			HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException {
 		addJsonResponseHeader(resp);
-		ObjectNode gformSchema = metaProvider.getGformSchema(entityType);
+		DerivedType derivedType = (DerivedType) entityType.getMetaType().getMetaAttribute(DerivedObject.META_ATTRIBUTE_CODE).getValue(entityType);
+		
+		ObjectNode gformSchema = metaProvider.getGformSchema(derivedType.getOriginalType());
 		try {
 			objectMapper.writeValue(resp.getWriter(), gformSchema);
 		} catch (Exception e) {
@@ -85,7 +93,9 @@ public class MetaRestService {
 
 	private void getResourceListing(HttpServletRequest req,
 			HttpServletResponse resp) throws ServletException {
-		Category category = metaProvider.getCategory();
+		String url=req.getRequestURL().toString();
+		String basePath=schemaRefResolver.getBasePath(url);
+		Category category = metaProvider.getCategory(url);
 		addJsonResponseHeader(resp);
 		try {
 			objectMapper.writeValue(resp.getWriter(), category);

@@ -1,13 +1,13 @@
 package org.atemsource.atem.service.gform.creator;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
 import org.atemsource.atem.service.gform.AttributeBuilder;
 import org.atemsource.atem.service.gform.GformContext;
-import org.atemsource.atem.service.gform.GformContextFactory;
 import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -30,6 +30,8 @@ public class MultiEmbeddedArrayAttributeCreatorTest {
 	private ObjectMapper mapper;
 	private ObjectNode node;
 	private EntityType<?> embeddedType;
+	@Inject
+	private GformContext ctx;
 
 	private EntityType<?> subType1;
 	private EntityType<?> subType2;
@@ -53,7 +55,6 @@ public class MultiEmbeddedArrayAttributeCreatorTest {
 		subBuilder2.addSingleAttribute("subProp2", Boolean.class);
 		subType2 = subBuilder2.createEntityType();
 
-		GformContext ctx = new GformContextFactory().newInstance();
 		creator = new MultiEmbeddedAttributeCreator();
 		creator.setCtx(ctx);
 		mapper = new ObjectMapper();
@@ -80,6 +81,7 @@ public class MultiEmbeddedArrayAttributeCreatorTest {
 		ArrayNode attributes=(ArrayNode) groups.get(0).get("attributes");
 		Assert.assertEquals(subType1.getCode(), groups.get(0).get("code").getTextValue());
 		Assert.assertEquals(3, attributes.size());
+		Assert.assertEquals("ext_type", node.get("typeProperty").getTextValue());
 	}
 
 }

@@ -12,8 +12,8 @@
 	<version>0.0.2-SNAPSHOT</version>
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>jar</packaging>
-	<name>Atem - API</name>
-	<description>The Atem API provides reflective access to classes. </description>
+	<name>Atem - Rest</name>
+	<description>The Atem Rest project provides generic rest services for crud operations on atem entities. </description>
 	<url>https://github.com/stemey/atem-rest-service</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -110,6 +110,18 @@
 						<delimiter>${*}</delimiter>
 					</delimiters>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

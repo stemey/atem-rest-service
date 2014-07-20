@@ -20,6 +20,8 @@ import org.atemsource.atem.api.attribute.relation.SingleAttribute;
 import org.atemsource.atem.api.infrastructure.exception.TechnicalException;
 import org.atemsource.atem.api.service.DeletionService;
 import org.atemsource.atem.api.service.IdentityAttributeService;
+import org.atemsource.atem.api.service.InsertionCallback;
+import org.atemsource.atem.api.service.InsertionService;
 import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.Type;
@@ -43,8 +45,8 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 public class JpaCrudService implements IdentityAttributeService,
-		FindByIdService, org.atemsource.atem.api.service.FindByIdService,
-		FindByTypeService, PersistenceService, StatefulUpdateService,
+		FindByIdService, 
+		FindByTypeService, InsertionService, StatefulUpdateService,
 		DeletionService {
 
 	private EntityManager entityManager;
@@ -188,11 +190,13 @@ public class JpaCrudService implements IdentityAttributeService,
 		return getIdAttribute(entityType).getTargetType();
 	}
 
-	public <E> Serializable insert(EntityType<E> originalType, E entity) {
+	public <E> Serializable insert(EntityType<E> originalType, InsertionCallback<E> callback) {
+		
 		TransactionStatus transaction = jpaTransactionManager
 				.getTransaction(new DefaultTransactionDefinition(
 						TransactionDefinition.PROPAGATION_REQUIRED));
 		try {
+			E entity =callback.get();
 			entityManager.persist(entity);
 			jpaTransactionManager.commit(transaction);
 			return getIdAttribute(originalType).getValue(entity);

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.atemsource.atem.api.BeanLocator;
+import org.atemsource.atem.service.meta.service.Cors;
 
 public class EntityServlet extends HttpServlet{
 
@@ -22,6 +23,13 @@ public class EntityServlet extends HttpServlet{
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		BeanLocator.getInstance().getInstance(EntityRestService.class).doGet(req, resp);
+	}
+	@Override
+	protected void doOptions(HttpServletRequest arg0, HttpServletResponse arg1)
+			throws ServletException, IOException {
+		Cors cors = new Cors();
+		cors.appendCors(arg1);
+		super.doOptions(arg0, arg1);
 	}
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

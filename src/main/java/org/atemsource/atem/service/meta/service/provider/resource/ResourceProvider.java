@@ -15,6 +15,7 @@ import org.atemsource.atem.api.service.IdentityAttributeService;
 import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.TypeFilter;
+import org.atemsource.atem.impl.meta.DerivedObject;
 import org.atemsource.atem.service.entity.StatefulUpdateService;
 import org.atemsource.atem.service.gform.GformContext;
 import org.atemsource.atem.service.meta.service.model.resource.Resource;
@@ -22,6 +23,7 @@ import org.atemsource.atem.service.meta.service.model.resource.ResourceOperation
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
 import org.atemsource.atem.service.meta.service.provider.TransformationFactory;
 import org.atemsource.atem.service.refresolver.RefResolver;
+import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -63,7 +65,8 @@ public class ResourceProvider implements ServiceProvider<Resource> {
 	private TypeFilter<ObjectNode> typeFilter;
 	
 	public <O> ObjectNode getSchema(EntityType<O> entityType) {
-		return gformContext.create(entityType);
+		EntityType<Object> jsonType = singleTransformationFactory.getTransformation(entityType).getEntityTypeB();
+		return gformContext.create(jsonType);
 	}
 
 	private Resource createResource(EntityType<?> viewType,

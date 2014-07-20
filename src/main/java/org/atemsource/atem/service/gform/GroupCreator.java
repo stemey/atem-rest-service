@@ -8,7 +8,7 @@ import org.atemsource.atem.api.type.Type;
 
 public class GroupCreator {
 	
-	private String editor="default";
+	private String editor;
 	private GformContext gformContext;
 
 	public void create(GroupBuilder groupBuilder, EntityType<?> entityType) {

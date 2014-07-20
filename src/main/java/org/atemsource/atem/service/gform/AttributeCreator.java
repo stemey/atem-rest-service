@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.service.gform.creator.AttributeCreatorMixins;
-import org.atemsource.atem.service.meta.service.binding.mixin.IdAttributeMixin;
 
 public class AttributeCreator {
 
@@ -22,6 +21,10 @@ public class AttributeCreator {
 
 	public void addMixin(AttributeCreatorMixins attributeMixin) {
 		mixins.add(attributeMixin);
+	}
+
+	public void setMixins(List<AttributeCreatorMixins> mixins) {
+		this.mixins = mixins;
 	}
 
 	public boolean handles(Attribute attribute) {

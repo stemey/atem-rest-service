@@ -6,7 +6,9 @@ import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.atemsource.atem.service.jpa.example.Feature;
 import org.atemsource.atem.service.meta.service.http.MetaRestService;
+import org.bouncycastle.asn1.pkcs.Attribute;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -58,6 +60,32 @@ public class JpaMetaIntegrationTest {
 			checkResourceExists(service, service.get("resourceUrl")
 					.getTextValue());
 			Assert.assertTrue(service.get("idProperty") != null);
+		}
+
+	}
+	
+	@Test
+	public void testGetSchema() throws IOException, ServletException {
+		MockHttpServletRequest req = new MockHttpServletRequest();
+		MockHttpServletResponse resp = new MockHttpServletResponse();
+		String uri = "/meta/json:"+Feature.class.getName();
+
+		req.setRequestURI(uri);
+		metaRestService.doGet(req, resp);
+		if (resp.getStatus() != HttpServletResponse.SC_OK) {
+			Assert.fail(resp.getContentAsString());
+		}
+
+		ObjectNode result = (ObjectNode) objectMapper.readTree(resp
+				.getContentAsString());
+
+		ArrayNode attributes = (ArrayNode) result.get("attributes");
+		Assert.assertEquals(2, attributes.size());
+		
+		for (int i = 0; i < attributes.size(); i++) {
+			JsonNode attribute = attributes.get(i);
+			Assert.assertNotNull(attribute.get("type").getTextValue());
+			Assert.assertNotNull(attribute.get("code").getTextValue());
 		}
 
 	}

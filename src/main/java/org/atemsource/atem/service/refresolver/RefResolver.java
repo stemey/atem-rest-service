@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.service.entity.TypeAndId;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 
 public interface RefResolver {
 

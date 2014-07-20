@@ -16,47 +16,91 @@
            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
 
 
-	<bean id="gformContext"
-		class="org.atemsource.atem.service.gform.GformContext">
+	<bean id="gformContext" class="org.atemsource.atem.service.gform.GformContext">
 		<property name="typeCreators">
 			<list>
-				<bean class="org.atemsource.atem.service.gform.TypeCreator">
-					<property name="typeMapping">
-						<map>
-							<entry key="text" value="string"/>
-							<entry key="boolean" value="boolean"/>
-						</map>
+				<bean class="org.atemsource.atem.service.gform.type.ReferenceTypeCreator">
+					<property name="refMetaDataManager">
+						<bean id="refMetaDataManager" class="org.atemsource.atem.service.RefMetaDataManagerImpl">
+							<property name="entityTypeRepository" ref="atem-repository" />
+							<property name="refResolver" ref="refResolver" />
+							<property name="schemaRefResolver" ref="schemaRefResolver" />
+						</bean>
 					</property>
+				</bean>
+				<bean class="org.atemsource.atem.service.gform.type.StringTypeCreator">
 					<property name="mixins">
 						<list>
-							<bean class="org.atemsource.atem.service.gform.creator.DateFormatMixin"/>
-							<bean class="org.atemsource.atem.service.gform.creator.MaxMixin"/>
-							<bean class="org.atemsource.atem.service.gform.creator.MinMixin"/>
-							<bean class="org.atemsource.atem.service.gform.creator.PatternMixin"/>
-							<bean class="org.atemsource.atem.service.gform.creator.PossibleValuesMixin"/>
+							<bean class="org.atemsource.atem.service.gform.creator.DateFormatMixin" />
+							<bean class="org.atemsource.atem.service.gform.creator.PatternMixin" />
+							<bean
+								class="org.atemsource.atem.service.gform.creator.PossibleValuesMixin" />
+						</list>
+					</property>
+				</bean>
+				<bean class="org.atemsource.atem.service.gform.type.IntegerTypeCreator">
+					<property name="mixins">
+						<list>
+							<bean class="org.atemsource.atem.service.gform.creator.MaxMixin" />
+							<bean class="org.atemsource.atem.service.gform.creator.MinMixin" />
+						</list>
+					</property>
+				</bean>
+				<bean class="org.atemsource.atem.service.gform.type.DecimalTypeCreator">
+					<property name="mixins">
+						<list>
+							<bean class="org.atemsource.atem.service.gform.creator.MaxMixin" />
+							<bean class="org.atemsource.atem.service.gform.creator.MinMixin" />
+						</list>
+					</property>
+				</bean>
+				<bean class="org.atemsource.atem.service.gform.type.BooleanTypeCreator" />
+			</list>
+		</property>
+		<property name="attributeCreators">
+			<list>
+				<bean
+					class="org.atemsource.atem.service.gform.creator.PrimitiveListAttributeCreator" />
+				<bean
+					class="org.atemsource.atem.service.gform.creator.EmbeddedAttributeCreator">
+					<property name="mixins">
+						<list>
+							<bean class="org.atemsource.atem.service.gform.creator.RequiredMixin" />
+						</list>
+					</property>
+				</bean>
+				<bean
+					class="org.atemsource.atem.service.gform.creator.MultiEmbeddedAttributeCreator">
+					<property name="mixins">
+						<list>
+							<bean class="org.atemsource.atem.service.gform.creator.RequiredMixin" />
+						</list>
+					</property>
+				</bean>
+				<bean
+					class="org.atemsource.atem.service.gform.creator.MultiEmbeddedArrayAttributeCreator" />
+				<bean
+					class="org.atemsource.atem.service.gform.creator.EmbeddedArrayAttributeCreator" />
+				<bean
+					class="org.atemsource.atem.service.gform.creator.PrimitiveAttributeCreator">
+					<property name="mixins">
+						<list>
+							<bean class="org.atemsource.atem.service.gform.creator.RequiredMixin" />
+							<bean
+								class="org.atemsource.atem.service.gform.creator.IdAttributeMixin" />
 						</list>
 					</property>
 				</bean>
 			</list>
 		</property>
-		<property name="attributeCreators">
-			<list>
-				<bean class="org.atemsource.atem.service.gform.creator.PrimitiveAttributeCreator"/>
-				<bean class="org.atemsource.atem.service.gform.creator.PrimitiveListAttributeCreator"/>
-				<bean class="org.atemsource.atem.service.gform.creator.EmbeddedAttributeCreator"/>
-				<bean class="org.atemsource.atem.service.gform.creator.MultiEmbeddedAttributeCreator"/>
-				<bean class="org.atemsource.atem.service.gform.creator.MultiEmbeddedArrayAttributeCreator"/>
-				<bean class="org.atemsource.atem.service.gform.creator.EmbeddedArrayAttributeCreator"/>
-			</list>
-		</property>
 		<property name="groupCreator">
-			<bean class="org.atemsource.atem.service.gform.GroupCreator"/>
+			<bean class="org.atemsource.atem.service.gform.GroupCreator" />
 		</property>
 		<property name="typeCodeResolver">
 			<bean class="org.atemsource.atem.service.gform.creator.TypeCodeResolver"></bean>
 		</property>
 		<property name="objectMapper">
-			<bean class="org.codehaus.jackson.map.ObjectMapper"/>
+			<bean class="org.codehaus.jackson.map.ObjectMapper" />
 		</property>
 	</bean>
 

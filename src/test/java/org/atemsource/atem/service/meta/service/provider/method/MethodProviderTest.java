@@ -11,6 +11,7 @@ import org.atemsource.atem.service.meta.service.provider.method.example.Car;
 import org.atemsource.atem.service.meta.service.provider.method.example.SpringExampleRestService;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -18,6 +19,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ContextConfiguration(locations = {"classpath:/test/atem/service/provider/method.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
+@Ignore
 public class MethodProviderTest {
 	
 	@Inject

@@ -25,6 +25,8 @@ import org.atemsource.atem.api.attribute.relation.SingleAttribute;
 import org.atemsource.atem.api.infrastructure.exception.TechnicalException;
 import org.atemsource.atem.api.service.DeletionService;
 import org.atemsource.atem.api.service.IdentityService;
+import org.atemsource.atem.api.service.InsertionCallback;
+import org.atemsource.atem.api.service.InsertionService;
 import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.PrimitiveType;
@@ -37,6 +39,7 @@ import org.atemsource.atem.service.entity.search.Operator;
 import org.atemsource.atem.service.entity.search.Paging;
 import org.atemsource.atem.service.entity.search.Query;
 import org.atemsource.atem.service.entity.search.Sorting;
+import org.atemsource.atem.service.meta.service.Cors;
 import org.atemsource.atem.service.refresolver.CollectionResource;
 import org.atemsource.atem.service.refresolver.RefResolver;
 import org.atemsource.atem.utility.transform.api.ConverterFactory;
@@ -62,7 +65,7 @@ public class EntityRestService {
 
 	private RefResolver refResolver;
 
-	
+	private Cors cors = new Cors();
 
 	public void setRefResolver(RefResolver refResolver) {
 		this.refResolver = refResolver;
@@ -96,6 +99,7 @@ public class EntityRestService {
 	 */
 	public <O> void doPut(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
+		cors.appendCors(resp);
 		try {
 			String uri = req.getRequestURI();
 			TypeAndId<O,ObjectNode> typeAndId = refResolver.parseSingleUri(uri);
@@ -124,6 +128,7 @@ public class EntityRestService {
 	 */
 	public void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException {
+		cors.appendCors(resp);
 		try {
 			String uri = req.getRequestURI();
 			CollectionResource<?,ObjectNode> collectionResource = refResolver
@@ -153,6 +158,7 @@ public class EntityRestService {
 	 */
 	public <O,T> void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws  IOException {
+		cors.appendCors(resp);
 		String uri = req.getRequestURI();
 		try {
 			CollectionResource<O,T> resource = refResolver.parseUri(uri);
@@ -191,6 +197,7 @@ public class EntityRestService {
 	 */
 	public <O,T> void doDelete(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException {
+		cors.appendCors(resp);
 		try {
 			String uri = req.getRequestURI();
 			TypeAndId<O,T> typeAndId = refResolver.parseSingleUri(uri);
@@ -360,8 +367,8 @@ public class EntityRestService {
 
 
 	
-	private <O> Object createEntity(HttpServletResponse response,CollectionResource<O,ObjectNode> resource,
-			ObjectNode entity) {
+	private <O> Object createEntity(HttpServletResponse response,final CollectionResource<O,ObjectNode> resource,
+			final ObjectNode entity) {
 		SimpleValidationContext context = new SimpleValidationContext(
 				entityTypeRepository);
 		ValidationService validationService = resource.getEntityType()
@@ -377,13 +384,20 @@ public class EntityRestService {
 			}
 		}
 
-		PersistenceService persistenceService = resource.getOriginalType()
-				.getService(PersistenceService.class);
+		InsertionService insertionService = resource.getOriginalType()
+				.getService(InsertionService.class);
 
-		O transformedEntity =refResolver.in(resource.getEntityType(),entity);
 		
-		Serializable id = persistenceService.insert(resource.getOriginalType(),
-				transformedEntity);
+		Serializable id = insertionService.insert(resource.getOriginalType(),
+				new InsertionCallback<O>() {
+
+					@Override
+					public O get() {
+						return refResolver.in(resource.getEntityType(), entity);
+					}
+				}
+			
+		);
 
 		return id;
 	}
@@ -392,7 +406,7 @@ public class EntityRestService {
 			throws IOException {
 		logger.error("error when serving request", e);
 		resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		e.printStackTrace(resp.getWriter());
+		//e.printStackTrace(resp.getWriter());
 		resp.flushBuffer();
 	}
 

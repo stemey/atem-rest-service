@@ -1,15 +1,13 @@
 package org.atemsource.atem.service.gform.creator;
 
-import static org.junit.Assert.*;
-
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
 import org.atemsource.atem.service.gform.AttributeBuilder;
 import org.atemsource.atem.service.gform.GformContext;
-import org.atemsource.atem.service.gform.GformContextFactory;
 import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -32,6 +30,8 @@ public class EmbeddedAttributeCreatorTest {
 	private ObjectMapper mapper;
 	private ObjectNode node;
 	private EntityType<?> embeddedType;
+	@Inject
+	private GformContext ctx;
 
 
 	@Before
@@ -42,10 +42,10 @@ public class EmbeddedAttributeCreatorTest {
 		embedded.addSingleAttribute("e1", String.class);
 		embedded.addSingleAttribute("e2", Boolean.class);
 		this.embeddedType = embedded.createEntityType();
-
-		GformContext ctx = new GformContextFactory().newInstance();
-		creator = new EmbeddedAttributeCreator();
+		
+		creator=new EmbeddedAttributeCreator();
 		creator.setCtx(ctx);
+
 		mapper = new ObjectMapper();
 		node = mapper.createObjectNode();
 	}

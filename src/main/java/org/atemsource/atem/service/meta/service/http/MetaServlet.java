@@ -8,8 +8,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.atemsource.atem.api.BeanLocator;
+import org.atemsource.atem.service.meta.service.Cors;
 
 public class MetaServlet extends HttpServlet{
+
+	@Override
+	protected void doOptions(HttpServletRequest arg0, HttpServletResponse arg1)
+			throws ServletException, IOException {
+		new Cors().appendCors(arg1);
+		super.doOptions(arg0, arg1);
+	}
 
 	/**
 	 * 

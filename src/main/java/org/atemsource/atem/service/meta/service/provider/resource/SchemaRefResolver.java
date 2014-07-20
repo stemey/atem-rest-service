@@ -41,4 +41,8 @@ public class SchemaRefResolver {
 			return null;
 		}
 	}
+
+	public String getBasePath(String metaUrl) {
+		return metaUrl.substring(0,metaUrl.length()-resourceUri.length());
+	}
 }

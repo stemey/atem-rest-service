@@ -1,6 +1,7 @@
 package org.atemsource.atem.service.gform.creator;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import org.atemsource.atem.api.attribute.Attribute;
 import org.atemsource.atem.api.attribute.CollectionSortType;
@@ -8,7 +9,6 @@ import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
 import org.atemsource.atem.service.gform.AttributeBuilder;
 import org.atemsource.atem.service.gform.GformContext;
-import org.atemsource.atem.service.gform.GformContextFactory;
 import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -31,6 +31,8 @@ public class MultiEmbeddedAttributeCreatorTest {
 	private ObjectMapper mapper;
 	private ObjectNode node;
 	private EntityType<?> embeddedType;
+	@Inject
+	private GformContext ctx;
 
 	private EntityType<?> subType1;
 	private EntityType<?> subType2;
@@ -43,18 +45,19 @@ public class MultiEmbeddedAttributeCreatorTest {
 		superEmbedded.addSingleAttribute("e1", String.class);
 		superEmbedded.addSingleAttribute("e2", Boolean.class);
 		this.embeddedType = superEmbedded.createEntityType();
-		
-		EntityTypeBuilder subBuilder1 = jsonRepository.createBuilder("sub1" + TestUtils.getNextId());
+
+		EntityTypeBuilder subBuilder1 = jsonRepository.createBuilder("sub1"
+				+ TestUtils.getNextId());
 		subBuilder1.superType(embeddedType);
 		subBuilder1.addSingleAttribute("subProp1", String.class);
 		subType1 = subBuilder1.createEntityType();
-		
-		EntityTypeBuilder subBuilder2 = jsonRepository.createBuilder("sub2" + TestUtils.getNextId());
+
+		EntityTypeBuilder subBuilder2 = jsonRepository.createBuilder("sub2"
+				+ TestUtils.getNextId());
 		subBuilder2.superType(embeddedType);
 		subBuilder2.addSingleAttribute("subProp2", Boolean.class);
 		subType2 = subBuilder2.createEntityType();
 
-		GformContext ctx = new GformContextFactory().newInstance();
 		creator = new MultiEmbeddedArrayAttributeCreator();
 		creator.setCtx(ctx);
 		mapper = new ObjectMapper();
@@ -64,11 +67,11 @@ public class MultiEmbeddedAttributeCreatorTest {
 	@Test
 	public void testSub1() {
 
-		Attribute<?,?> attribute = builder.addMultiAssociationAttribute("test",
-				embeddedType,CollectionSortType.ORDERABLE);
+		Attribute<?, ?> attribute = builder.addMultiAssociationAttribute(
+				"test", embeddedType, CollectionSortType.ORDERABLE);
 
 		EntityType<?> entityType = builder.createEntityType();
-		
+
 		creator.create(new AttributeBuilder(mapper, node), attribute);
 
 		Assert.assertNotNull(entityType);
@@ -76,11 +79,13 @@ public class MultiEmbeddedAttributeCreatorTest {
 		Assert.assertTrue(creator.handles(entityType.getAttribute("test")));
 		Assert.assertEquals("array", node.get("type").getTextValue());
 		Assert.assertEquals("test", node.get("code").getTextValue());
-		
+
 		ArrayNode groups = (ArrayNode) node.get("groups");
-		ArrayNode attributes=(ArrayNode) groups.get(0).get("attributes");
-		Assert.assertEquals(subType1.getCode(), groups.get(0).get("code").getTextValue());
+		ArrayNode attributes = (ArrayNode) groups.get(0).get("attributes");
+		Assert.assertEquals(subType1.getCode(), groups.get(0).get("code")
+				.getTextValue());
 		Assert.assertEquals(3, attributes.size());
+		Assert.assertEquals("ext_type", node.get("typeProperty").getTextValue());
 	}
 
 }

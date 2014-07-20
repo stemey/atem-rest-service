@@ -42,18 +42,18 @@ public class RefResolverImplTest {
 	@Test
 	public void testGetCollectionUri() {
 		String uri=refResolver.getCollectionUri(entityTypeRepository.getEntityType(Product.class));
-		Assert.assertEquals("/xx/org.atemsource.atem.service.refresolver.example.Product", uri);
+		Assert.assertEquals("/xx/org.atemsource.atem.service.refresolver.example.Product/", uri);
 	}
 
 	@Test
 	public <O,T>void testParseUri() {
-		CollectionResource<O, T> resource=refResolver.parseUri("/xx/json:org.atemsource.atem.service.refresolver.example.Product");
+		CollectionResource<O, T> resource=refResolver.parseUri("/xx/json:org.atemsource.atem.service.refresolver.example.Product/");
 		Assert.assertFalse(resource instanceof TypeAndId);
 	}
 
 	@Test
 	public void testParseCollectionUri() {
-		CollectionResource collectionResource = refResolver.parseCollectionUri("/xx/json:org.atemsource.atem.service.refresolver.example.Product");
+		CollectionResource collectionResource = refResolver.parseCollectionUri("/xx/json:org.atemsource.atem.service.refresolver.example.Product/");
 		Assert.assertEquals(Product.class, collectionResource.getOriginalType().getJavaType());
 		Assert.assertEquals("json:org.atemsource.atem.service.refresolver.example.Product", collectionResource.getEntityType().getCode());
 	}

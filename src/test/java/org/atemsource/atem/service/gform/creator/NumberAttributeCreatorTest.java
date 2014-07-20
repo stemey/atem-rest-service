@@ -27,7 +27,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ContextConfiguration(locations = { "classpath:/test/atem/gform/json.xml" })
 @RunWith(SpringJUnit4ClassRunner.class)
-public class PrimitiveAttributeCreatorTest {
+public class NumberAttributeCreatorTest {
 
 	@Resource(name = "atem-json-repository")
 	private DynamicEntityTypeSubrepository<ObjectNode> jsonRepository;
@@ -49,9 +49,9 @@ public class PrimitiveAttributeCreatorTest {
 	}
 
 	@Test
-	public void testString() {
+	public void testInteger() {
 
-		builder.addSingleAttribute("test", String.class);
+		builder.addSingleAttribute("test", Integer.class);
 
 		EntityType<?> entityType = builder.createEntityType();
 		Assert.assertNotNull(entityType);
@@ -59,48 +59,31 @@ public class PrimitiveAttributeCreatorTest {
 		Assert.assertTrue(creator.handles(entityType.getAttribute("test")));
 		creator.create(createAttributeBuilder(),
 				entityType.getAttribute("test"));
-		Assert.assertEquals("string", node.get("type").getTextValue());
+		Assert.assertEquals("number", node.get("type").getTextValue());
 		Assert.assertEquals("test", node.get("code").getTextValue());
 	}
 
-	@Test
-	public void testPossibleValues() {
-
-		SingleAttribute<String> attribute = builder.addSingleAttribute("test",
-				String.class);
-		attribute.setMetaValue(PossibleValues.META_ATTRIBUTE_CODE,
-				new StringPossibleValues(new String[] { "jj", "kk" }));
-
-		creator.create(createAttributeBuilder(), attribute);
-		Assert.assertTrue(node.get("values") instanceof ArrayNode);
-		Assert.assertEquals(2, ((ArrayNode) node.get("values")).size());
-	}
 
 	@Test
-	public void testRequired() {
+	public void testDouble() {
 
-		SingleAttribute<String> attribute = builder.addSingleAttribute("test",
-				String.class);
-		((AbstractAttribute) attribute).setRequired(true);
+		builder.addSingleAttribute("test", double.class);
 
-		creator.create(createAttributeBuilder(), attribute);
-		Assert.assertTrue(node.get("required").getBooleanValue());
+		EntityType<?> entityType = builder.createEntityType();
+		Assert.assertNotNull(entityType);
+
+		Assert.assertTrue(creator.handles(entityType.getAttribute("test")));
+		creator.create(createAttributeBuilder(),
+				entityType.getAttribute("test"));
+		Assert.assertEquals("number", node.get("type").getTextValue());
+		Assert.assertEquals("test", node.get("code").getTextValue());
 	}
+
+
 
 	private AttributeBuilder createAttributeBuilder() {
 		return new AttributeBuilder(mapper, node);
 	}
 
-	@Test
-	public void testDateFormat() {
-
-		SingleAttribute<String> attribute = builder.addSingleAttribute("test",
-				String.class);
-		attribute.setMetaValue(DateFormat.META_ATTRIBUTE_CODE, new DateFormat(
-				"dd.MM.yyyy", new SimpleDateFormat("dd.MM.yyyy")));
-
-		creator.create(createAttributeBuilder(), attribute);
-		Assert.assertEquals("dd.MM.yyyy", node.get("format").getTextValue());
-	}
 
 }

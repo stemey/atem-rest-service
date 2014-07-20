@@ -137,7 +137,7 @@ public class RefResolverImpl implements RefResolver {
 
 	@Override
 	public String getCollectionUri(EntityType<?> entityType) {
-		return uriPrefix + "/" + entityType.getCode();
+		return uriPrefix + "/" + entityType.getCode()+"/";
 	}
 
 	@Override

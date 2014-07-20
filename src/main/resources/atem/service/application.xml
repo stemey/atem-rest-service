@@ -32,16 +32,17 @@
 			<list>
 				<ref bean="atem-entityType-repository" />
 				<ref bean="atem-attribute-repository" />
-				<ref bean="atem-transformation-subrepository" />
-				<ref bean="service-meta-repository" />
-				<ref bean="atem-json-repository" />
-				<ref bean="jpa-repository" />
 				<ref bean="jpa-json-repository" />
+				<ref bean="service-meta-repository" />
+				<ref bean="jpa-repository" />
+				<ref bean="atem-json-repository" />
+				<ref bean="atem-transformation-subrepository" />
 			</list>
 		</property>
 	</bean>
 
-	<bean id="metaProvider" class="org.atemsource.atem.service.meta.service.provider.MetaProvider">
+	<bean id="metaProvider"
+		class="org.atemsource.atem.service.meta.service.provider.MetaProvider">
 		<property name="serviceProviders">
 			<list>
 				<ref bean="jpa-provider" />
