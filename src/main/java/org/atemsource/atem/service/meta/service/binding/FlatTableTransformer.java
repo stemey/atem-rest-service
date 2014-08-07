@@ -44,7 +44,7 @@ public class FlatTableTransformer implements TransformationFactory {
 	public EntityTypeTransformation<?, ?> createTransformation(EntityType<?> originalType) {
 		final EntityTypeBuilder targetBuilder = dynamicEntityTypeSubrepository
 				.createBuilder(getFlatTypeCode(originalType));
-		final TypeTransformationBuilder<?, ?> builder = transformationBuilderFactory
+		final TypeTransformationBuilder<?,?> builder = transformationBuilderFactory
 				.create(originalType, targetBuilder);
 		String path = "";
 		HierachyVisitor.visit(originalType, new ViewVisitor<String>() {

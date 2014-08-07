@@ -28,5 +28,7 @@ public class MetaServlet extends HttpServlet{
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		BeanLocator.getInstance().getInstance(MetaRestService.class).doGet(req, resp);
 	}
+	
+	
 
 }

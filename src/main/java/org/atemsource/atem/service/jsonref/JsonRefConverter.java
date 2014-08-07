@@ -28,9 +28,10 @@ public class JsonRefConverter<O> extends AbstractLocalConverter<O, ObjectNode> {
 		super();
 		this.refResolver = refResolver;
 		this.objectMapper = objectMapper;
-		setTypeB(new JsonRefTypeImpl(refResolver,jsonType));
+		setTypeB(new JsonRefTypeImpl(refResolver,
+				new EntityType[] { jsonType }));
 		setTypeA(entityType);
-		this.jsonType=jsonType;
+		this.jsonType = jsonType;
 	}
 
 	public O convertBA(ObjectNode b, TransformationContext ctx) {
@@ -69,7 +70,7 @@ public class JsonRefConverter<O> extends AbstractLocalConverter<O, ObjectNode> {
 				// EntityType<Object> entityTypeB =get
 				Serializable value = identityAttributeService.getIdAttribute(
 						entityTypeByA).getValue(a);
-				
+
 				String uri = refResolver.getSingleUri(jsonType, value);
 				node.put("$ref", uri);
 			}

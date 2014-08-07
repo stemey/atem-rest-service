@@ -24,7 +24,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class RefResolverImpl implements RefResolver {
 	private EntityTypeRepository entityTypeRepository;
 	private Pattern singleResourcePattern;
-	public static final String REST_PATTERN = "/([^/]+)(/([^/]+))?";
+	public static final String REST_PATTERN = "/([^/]+)(/(.+))?";
 
 	private String uriPrefix = "";
 

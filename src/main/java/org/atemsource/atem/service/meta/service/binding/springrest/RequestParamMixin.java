@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class RequestParamMixin implements AttributeMixin {
 
 	@Override
-	public void mixin(TypeTransformationBuilder<?, ?> builder) {
+	public void mixin(TypeTransformationBuilder<?,?> builder) {
 		builder.transform().from(ClassUtils.getMetaAttributePath(RequestParam.class)+".required").to("required"); 
 	}
 

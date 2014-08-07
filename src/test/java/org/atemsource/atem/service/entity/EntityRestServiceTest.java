@@ -7,6 +7,8 @@ import javax.servlet.ServletException;
 
 import org.atemsource.atem.api.infrastructure.util.ReflectionUtils;
 import org.atemsource.atem.api.service.DeletionService;
+import org.atemsource.atem.api.service.InsertionCallback;
+import org.atemsource.atem.api.service.InsertionService;
 import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.service.refresolver.CollectionResource;
@@ -213,7 +215,7 @@ public class EntityRestServiceTest
 		DerivedType<O,ObjectNode> derivedType=new DerivedType<O,ObjectNode>();
 		derivedType.setOriginalType(originalType);
 		final CollectionResource<O,ObjectNode> resource=new CollectionResource<O,ObjectNode>(derivedType,entityType);
-		final PersistenceService persistenceService = context.mock(PersistenceService.class);
+		final InsertionService persistenceService = context.mock(InsertionService.class);
 		
 		
 		
@@ -228,10 +230,10 @@ public class EntityRestServiceTest
 			one(entityType).getService(ValidationService.class);
 			will(returnValue(null));
 			
-			one(originalType).getService(PersistenceService.class);
+			one(originalType).getService(InsertionService.class);
 			will(returnValue(persistenceService));
 			
-			one(persistenceService).insert(resource.getOriginalType(), entity);
+			one(persistenceService).insert(with(any(EntityType.class)), with(any(InsertionCallback.class)));
 			will(returnValue(12));
 			
 		}});

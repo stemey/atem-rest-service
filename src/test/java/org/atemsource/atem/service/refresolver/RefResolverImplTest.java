@@ -7,6 +7,7 @@ import junit.framework.Assert;
 import org.atemsource.atem.api.EntityTypeRepository;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.service.entity.TypeAndId;
+import org.atemsource.atem.service.refresolver.example.Category;
 import org.atemsource.atem.service.refresolver.example.Product;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +32,15 @@ public class RefResolverImplTest {
 		Assert.assertEquals(3, typeAndId.getOriginalId());
 		Assert.assertEquals("json:org.atemsource.atem.service.refresolver.example.Product", typeAndId.getEntityType().getCode());
 		Assert.assertEquals(3, typeAndId.getOriginalId());
+	}
+	
+	@Test
+	public void testParseUrlAsId() {
+		TypeAndId typeAndId = refResolver.parseSingleUri("/xx/json:org.atemsource.atem.service.refresolver.example.Category//index.html");
+		Assert.assertEquals(Category.class, typeAndId.getOriginalType()
+				.getJavaType());
+		Assert.assertEquals("/index.html", typeAndId.getId());
+		Assert.assertEquals("json:org.atemsource.atem.service.refresolver.example.Category", typeAndId.getEntityType().getCode());
 	}
 	
 	@Test

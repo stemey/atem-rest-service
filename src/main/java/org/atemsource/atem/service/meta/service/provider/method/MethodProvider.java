@@ -4,10 +4,8 @@
 package org.atemsource.atem.service.meta.service.provider.method;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -26,6 +24,7 @@ import org.atemsource.atem.service.meta.service.model.method.Method;
 import org.atemsource.atem.service.meta.service.provider.ServiceProvider;
 import org.atemsource.atem.service.meta.service.provider.method.paramcreator.RequestBodyCreator;
 import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
+import org.atemsource.atem.utility.transform.api.AbstractTypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
 import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.codehaus.jackson.node.ObjectNode;
@@ -210,7 +209,7 @@ public class MethodProvider implements ServiceProvider<Method>
 	{
 		org.atemsource.atem.api.method.Method method = methodFactory.create(methodMeta);
 		EntityTypeBuilder builder = jsonRepository.createBuilder("request-param:" + method.getParameterType().getCode());
-		TypeTransformationBuilder<Object[], ?> transformationBuilder =
+		TypeTransformationBuilder<?,?> transformationBuilder =
 			transformationBuilderFactory.create(method.getParameterType(), builder);
 		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes())
 		{
@@ -229,7 +228,7 @@ public class MethodProvider implements ServiceProvider<Method>
 		org.atemsource.atem.api.method.Method method = methodFactory.create(methodMeta);
 		EntityTypeBuilder builder =
 			jsonRepository.createBuilder("request-pathvariables:" + method.getParameterType().getCode());
-		TypeTransformationBuilder<Object[], ?> transformationBuilder =
+		TypeTransformationBuilder<?,?> transformationBuilder =
 			transformationBuilderFactory.create(method.getParameterType(), builder);
 		for (Attribute<?, ?> parameter : method.getParameterType().getDeclaredAttributes())
 		{

@@ -13,18 +13,15 @@ public class JsonRefTypeImpl extends PrimitiveTypeImpl<ObjectNode> implements
 
 	private static final String JSON_REF_TYPE_CODE = "json-ref";
 
-	private EntityType<?> targetType;
+	private EntityType<?>[] targetTypes;
 
 	private RefResolver refResolver;
 
-	@Override
-	public EntityType<?> getTargetType() {
-		return targetType;
-	}
+	
 
-	public JsonRefTypeImpl(RefResolver refResolver,EntityType<ObjectNode> targetType) {
+	public JsonRefTypeImpl(RefResolver refResolver,EntityType<ObjectNode>[] targetTypes) {
 		super();
-		this.targetType = targetType;
+		this.targetTypes = targetTypes;
 		this.refResolver = refResolver;
 	}
 
@@ -43,9 +40,19 @@ public class JsonRefTypeImpl extends PrimitiveTypeImpl<ObjectNode> implements
 	}
 
 	@Override
-	public EntityType<?> getTargetType(ObjectNode value) {
-		return refResolver.parseSingleUri(value.get("ref").getTextValue())
+	public <R> EntityType<R> getTargetType(ObjectNode value) {
+		return (EntityType<R>) refResolver.parseSingleUri(value.get("ref").getTextValue())
 				.getEntityType();
+	}
+
+	@Override
+	public <R> EntityType<R>[] getTargetTypes() {
+		return (EntityType<R>[]) targetTypes;
+	}
+
+	@Override
+	public <R> String createValue(EntityType<R> entityType, Serializable id) {
+		return refResolver.getSingleUri(entityType, id);
 	}
 
 }

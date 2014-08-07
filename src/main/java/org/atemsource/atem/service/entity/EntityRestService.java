@@ -3,53 +3,26 @@ package org.atemsource.atem.service.entity;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.atemsource.atem.api.EntityTypeRepository;
-import org.atemsource.atem.api.attribute.Attribute;
-import org.atemsource.atem.api.attribute.relation.SingleAttribute;
-import org.atemsource.atem.api.infrastructure.exception.TechnicalException;
 import org.atemsource.atem.api.service.DeletionService;
-import org.atemsource.atem.api.service.IdentityService;
 import org.atemsource.atem.api.service.InsertionCallback;
 import org.atemsource.atem.api.service.InsertionService;
-import org.atemsource.atem.api.service.PersistenceService;
 import org.atemsource.atem.api.type.EntityType;
-import org.atemsource.atem.api.type.PrimitiveType;
-import org.atemsource.atem.impl.json.JsonUtils;
-import org.atemsource.atem.impl.meta.DerivedObject;
-import org.atemsource.atem.service.entity.collection.ContentHeaderPagingParser;
-import org.atemsource.atem.service.entity.search.AttributePredicate;
-import org.atemsource.atem.service.entity.search.AttributeSorting;
-import org.atemsource.atem.service.entity.search.Operator;
-import org.atemsource.atem.service.entity.search.Paging;
-import org.atemsource.atem.service.entity.search.Query;
-import org.atemsource.atem.service.entity.search.Sorting;
 import org.atemsource.atem.service.meta.service.Cors;
 import org.atemsource.atem.service.refresolver.CollectionResource;
 import org.atemsource.atem.service.refresolver.RefResolver;
 import org.atemsource.atem.utility.transform.api.ConverterFactory;
 import org.atemsource.atem.utility.transform.api.JacksonTransformationContext;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
-import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.atemsource.atem.utility.validation.SimpleValidationContext;
 import org.atemsource.atem.utility.validation.ValidationService;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -137,7 +110,7 @@ public class EntityRestService {
 				BufferedReader reader = req.getReader();
 				ObjectNode jsonNode = (ObjectNode) objectMapper.readTree(reader);
 				Object returnValue = createEntity(resp,collectionResource, jsonNode);
-				objectMapper.writeValue(resp.getWriter(), returnValue);
+				resp.getWriter().write(String.valueOf(returnValue));
 			} else {
 				// 404
 				resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -149,7 +122,7 @@ public class EntityRestService {
 	}
 
 	/**
-	 * get a sngle entity or a collection
+	 * get a single entity or a collection
 	 * 
 	 * @param req
 	 * @param resp
@@ -188,6 +161,8 @@ public class EntityRestService {
 
 	}
 
+	
+	
 	/**
 	 * delete an entity
 	 * 
@@ -203,7 +178,7 @@ public class EntityRestService {
 			TypeAndId<O,T> typeAndId = refResolver.parseSingleUri(uri);
 			if (typeAndId != null) {
 				if (typeAndId.getOriginalId() == null) {
-					// 404
+					// 404 
 					resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				} else {
 					// TODO errors should be possible too
@@ -299,7 +274,7 @@ public class EntityRestService {
 		FindByIdService findByIdService = typeAndId.getOriginalType()
 				.getService(FindByIdService.class);
 
-		T json = findByIdService.findById(typeAndId.getOriginalType(), typeAndId.getId(),
+		T json = findByIdService.findById(typeAndId.getOriginalType(), typeAndId.getOriginalId(),
 				new SingleCallback<O,T>() {
 
 					@Override

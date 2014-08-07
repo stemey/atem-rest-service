@@ -5,7 +5,7 @@ import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 public class AttributeDescriptionMixin implements AttributeMixin{
 
 	@Override
-	public void mixin(TypeTransformationBuilder<?, ?> builder) {
+	public void mixin(TypeTransformationBuilder<?,?> builder) {
 		builder.transform().from("code").to("label");
 	}
 

@@ -1,7 +1,7 @@
 package org.atemsource.atem.service.gform.type;
 
 import org.atemsource.atem.api.attribute.Attribute;
-import org.atemsource.atem.api.attribute.relation.SingleAttribute;
+import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.primitive.RefType;
 import org.atemsource.atem.service.RefMetaDataManager;
 import org.atemsource.atem.service.gform.TypeBuilder;
@@ -14,17 +14,22 @@ public class ReferenceTypeCreator extends TypeCreator {
 	@Override
 	public void create(TypeBuilder typeBuilder, Attribute<?, ?> attribute) {
 		typeBuilder.type("ref");
-		RefType refType = (RefType) attribute.getTargetType();
+		RefType<?> refType = (RefType<?>) attribute.getTargetType();
+		if (refType.getTargetTypes().length!=1) {
+			throw new IllegalArgumentException("cannot handle ref type with more than one target type");
+		}
+		
+		EntityType<?> targetType = refType.getTargetTypes()[0];
 
 		typeBuilder.getNode().put("schemaUrl",
-				refMetaDataManager.getSchemaUri(refType.getTargetType().getCode()));
+				refMetaDataManager.getSchemaUri(targetType.getCode()));
 		typeBuilder.getNode().put("url",
-				refMetaDataManager.getSearchUri(refType.getTargetType().getCode()));
+				refMetaDataManager.getSearchUri(targetType.getCode()));
 
 		typeBuilder.getNode().put("idProperty",
-				refMetaDataManager.getIdAttribute(refType.getTargetType().getCode()));
+				refMetaDataManager.getIdAttribute(targetType.getCode()));
 		typeBuilder.getNode().put("searchProperty",
-				refMetaDataManager.getSearchAttribute(refType.getTargetType().getCode()));
+				refMetaDataManager.getSearchAttribute(targetType.getCode()));
 
 		super.create(typeBuilder, attribute);
 	}

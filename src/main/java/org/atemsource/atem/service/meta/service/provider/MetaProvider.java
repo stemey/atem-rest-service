@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import org.atemsource.atem.api.type.EntityType;
-import org.atemsource.atem.service.gform.GformContext;
-import org.atemsource.atem.service.meta.service.model.Meta;
 import org.atemsource.atem.service.meta.service.model.Service;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -48,5 +44,7 @@ public class MetaProvider {
 		category.setBasePath(baseUri);
 		return category;
 	}
+
+	
 
 }
