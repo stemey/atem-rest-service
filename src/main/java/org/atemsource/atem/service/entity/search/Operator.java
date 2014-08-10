@@ -7,6 +7,7 @@ public enum Operator {
 	LET, //
 	LT, //
 	LIKE, //
-	REGEX,//
+	REGEX, //
+	IN;//
 
 }

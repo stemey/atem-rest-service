@@ -18,8 +18,6 @@ import org.atemsource.atem.utility.transform.api.JacksonTransformationContext;
 import org.atemsource.atem.utility.transform.api.UniTransformation;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.atemsource.atem.utility.transform.impl.transformation.AbstractOneToOneAttributeTransformation;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 
 public class RefResolverImpl implements RefResolver {
 	private EntityTypeRepository entityTypeRepository;
@@ -123,12 +121,13 @@ public class RefResolverImpl implements RefResolver {
 		if (matcher.find()) {
 			String type = matcher.group(1);
 			EntityType<T> entityType = entityTypeRepository.getEntityType(type);
-
+			CollectionResource<O, T> collectionResource;
 			DerivedType<O, T> derivedType = derivedTypeAttribute
 					.getValue(entityType);
 			EntityType<?> originalEntityType = derivedType.getOriginalType();
-			CollectionResource<O, T> collectionResource = new CollectionResource(
+			collectionResource = new CollectionResource(
 					derivedType, entityType);
+
 			return collectionResource;
 		} else {
 			return null;

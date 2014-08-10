@@ -1,4 +1,7 @@
 package org.atemsource.atem.service.entity;
+
+import org.atemsource.atem.api.type.EntityType;
+
 /**
  * callback to handle loading and transformation of single entity.
  * @author stemey

@@ -110,7 +110,7 @@ public class EntityRestService {
 				BufferedReader reader = req.getReader();
 				ObjectNode jsonNode = (ObjectNode) objectMapper.readTree(reader);
 				Object returnValue = createEntity(resp,collectionResource, jsonNode);
-				resp.getWriter().write(String.valueOf(returnValue));
+				objectMapper.writeValue(resp.getWriter(), returnValue);
 			} else {
 				// 404
 				resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -122,7 +122,7 @@ public class EntityRestService {
 	}
 
 	/**
-	 * get a single entity or a collection
+	 * get a sngle entity or a collection
 	 * 
 	 * @param req
 	 * @param resp
