@@ -124,7 +124,7 @@ public class GridxQueryParser<O, T> implements QueryParser<O, T> {
 						if (operator != null) {
 							predicates.add(new AttributePredicate(
 									(SingleAttribute) transformation
-											.getAttributeB().getAttribute(),
+											.getAttributeA().getAttribute(),
 									operator, value));
 						}
 					}
