@@ -88,11 +88,11 @@ public class GridxQueryParser<O, T> implements QueryParser<O, T> {
 					.getParameterMap().entrySet().iterator();
 			while (iterator.hasNext()) {
 				Map.Entry<String, String[]> next = iterator.next();
-				String attributeCode = next.getKey();
+				String attributeCode =  next.getKey();
 				AbstractOneToOneAttributeTransformation<?, ?> transformation = getAttribute(
 						resource, attributeCode);
 				if (transformation != null
-						&& transformation.getAttributeB().getTargetType() instanceof PrimitiveType) {
+						&& transformation.getAttributeB().getAttribute().getTargetType() instanceof PrimitiveType) {
 
 					if (next.getValue().length > 1) {
 						Operator operator = Operator.IN;
