@@ -85,10 +85,14 @@ public class JpaGetCollectionService<O> implements
 						Result result = new Result();
 						ArrayNode arrayNode = objectMapper.createArrayNode();
 						for (O entity : entities) {
+							try {
 							ObjectNode json = ab.convert(entity,
 									new JacksonTransformationContext(
 											entityTypeRepository));
 							arrayNode.add(json);
+							}catch(Exception e) {
+									
+							}
 						}
 						result.entities = arrayNode;
 						result.totalCount = totalCount;
